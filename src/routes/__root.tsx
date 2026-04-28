@@ -2,7 +2,9 @@ import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/r
 
 import "@fontsource/instrument-serif/400.css";
 import "@fontsource/instrument-serif/400-italic.css";
-import "@fontsource-variable/work-sans";
+import "@fontsource/work-sans/400.css";
+import "@fontsource/work-sans/600.css";
+import "@fontsource/work-sans/700.css";
 
 import appCss from "../styles.css?url";
 

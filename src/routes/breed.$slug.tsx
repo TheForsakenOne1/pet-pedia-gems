@@ -50,7 +50,8 @@ export const Route = createFileRoute("/breed/$slug")({
 });
 
 function BreedPage() {
-  const { breed: b } = Route.useLoaderData();
+  const data = Route.useLoaderData();
+  const b = data.breed;
   const related = breeds.filter(x => x.species === b.species && x.slug !== b.slug).slice(0, 3);
 
   const facts: [string, string][] = [
