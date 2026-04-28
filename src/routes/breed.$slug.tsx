@@ -1,15 +1,22 @@
 import { createFileRoute, notFound, Link } from "@tanstack/react-router";
-import { breeds, getBreed } from "@/data/breeds";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { StatBar } from "@/components/stat-bar";
 import { BreedCard } from "@/components/breed-card";
+import { getBreedDetail, listBreeds } from "@/server/breeds";
+import type { BreedDetail, BreedSummary } from "@/types/breed";
 
 export const Route = createFileRoute("/breed/$slug")({
-  loader: ({ params }) => {
-    const breed = getBreed(params.slug);
+  loader: async ({ params }) => {
+    const [breed, all] = await Promise.all([
+      getBreedDetail({ data: { slug: params.slug } }),
+      listBreeds(),
+    ]);
     if (!breed) throw notFound();
-    return { breed };
+    const related = all
+      .filter((b) => b.species === breed.species && b.slug !== breed.slug && !!b.image)
+      .slice(0, 3);
+    return { breed, related };
   },
   head: ({ loaderData }) => {
     const b = loaderData?.breed;
@@ -20,8 +27,10 @@ export const Route = createFileRoute("/breed/$slug")({
         { name: "description", content: `${b.name}: ${b.tagline}. ${b.intro.slice(0, 140)}` },
         { property: "og:title", content: `${b.name} — ${b.tagline}` },
         { property: "og:description", content: b.intro.slice(0, 200) },
-        { property: "og:image", content: b.image },
-        { name: "twitter:image", content: b.image },
+        ...(b.image ? [
+          { property: "og:image", content: b.image },
+          { name: "twitter:image", content: b.image },
+        ] : []),
         { name: "twitter:card", content: "summary_large_image" },
       ],
     };
@@ -50,9 +59,9 @@ export const Route = createFileRoute("/breed/$slug")({
 });
 
 function BreedPage() {
-  const data = Route.useLoaderData();
+  const data = Route.useLoaderData() as { breed: BreedDetail; related: BreedSummary[] };
   const b = data.breed;
-  const related = breeds.filter(x => x.species === b.species && x.slug !== b.slug).slice(0, 3);
+  const related = data.related;
 
   const facts: [string, string][] = [
     ["Origin", b.origin],
@@ -75,7 +84,9 @@ function BreedPage() {
           <div className="flex flex-wrap items-baseline justify-between gap-4 text-xs uppercase tracking-[0.25em] text-foreground/60">
             <span>Dossier № {b.issueNo}</span>
             <span className="hidden md:inline">{b.species === "dog" ? "Section I — Canidae" : "Section II — Felidae"}</span>
-            <span>Folio {b.issueNo} / {breeds.length.toString().padStart(2, "0")}</span>
+            <Link to={b.species === "dog" ? "/dogs" : "/cats"} className="text-rust">
+              ← All {b.species === "dog" ? "dogs" : "cats"}
+            </Link>
           </div>
           <p className="eyebrow mt-10 text-rust">{b.tagline}</p>
           <h1 className="display-xl mt-4 text-balance">{b.name}.</h1>
@@ -86,9 +97,15 @@ function BreedPage() {
 
         <div className="mx-auto mt-12 max-w-[1400px] px-6 md:px-10">
           <div className="relative aspect-[16/9] overflow-hidden bg-ink md:aspect-[21/9]">
-            <img src={b.image} alt={b.name} className="h-full w-full object-cover" loading="eager" width={1024} height={1280}/>
+            {b.image ? (
+              <img src={b.image} alt={b.name} className="h-full w-full object-cover" loading="eager" width={2000} height={1100}/>
+            ) : (
+              <div className="flex h-full w-full items-center justify-center font-serif text-4xl italic text-cream">{b.name}</div>
+            )}
           </div>
-          <p className="mt-3 text-xs uppercase tracking-[0.22em] text-muted-foreground">Plate № {b.issueNo} — {b.name}, photographed for this issue</p>
+          <p className="mt-3 text-xs uppercase tracking-[0.22em] text-muted-foreground">
+            Plate № {b.issueNo} — {b.name}{b.image ? ", reference photograph" : ""}
+          </p>
         </div>
       </section>
 
@@ -128,7 +145,7 @@ function BreedPage() {
               <p className="eyebrow text-rust">Field Notes</p>
               <h3 className="font-serif text-3xl mt-3">Three things you may not know.</h3>
               <ol className="mt-8 space-y-6">
-                {b.funFacts.map((f: string, i: number) => (
+                {b.funFacts.map((f, i) => (
                   <li key={i} className="flex gap-6">
                     <span className="font-serif text-5xl leading-none text-rust">{(i+1).toString().padStart(2, "0")}</span>
                     <p className="text-pretty text-lg leading-relaxed text-foreground/85">{f}</p>
@@ -136,6 +153,15 @@ function BreedPage() {
                 ))}
               </ol>
             </div>
+
+            {b.referenceUrl && (
+              <p className="mt-10 text-sm text-muted-foreground">
+                Further reading:{" "}
+                <a href={b.referenceUrl} target="_blank" rel="noopener noreferrer" className="border-b border-ink/40 hover:text-rust">
+                  {new URL(b.referenceUrl).hostname.replace(/^www\./, "")}
+                </a>
+              </p>
+            )}
           </article>
 
           {/* SIDEBAR */}
@@ -144,7 +170,7 @@ function BreedPage() {
               <div>
                 <p className="eyebrow text-rust">Temperament</p>
                 <div className="mt-4 flex flex-wrap gap-2">
-                  {b.temperament.map((t: string) => (
+                  {b.temperament.map((t) => (
                     <span key={t} className="border border-ink px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em]">{t}</span>
                   ))}
                 </div>
@@ -174,17 +200,19 @@ function BreedPage() {
       </section>
 
       {/* RELATED */}
-      <section className="mx-auto max-w-[1400px] border-t border-ink/30 px-6 py-20 md:px-10">
-        <div className="flex items-baseline justify-between border-b border-ink/30 pb-4">
-          <p className="eyebrow">Continue Reading</p>
-          <Link to={b.species === "dog" ? "/dogs" : "/cats"} className="text-xs font-semibold uppercase tracking-[0.22em] text-rust">
-            All {b.species === "dog" ? "dogs" : "cats"} →
-          </Link>
-        </div>
-        <div className="mt-10 grid gap-x-10 gap-y-12 md:grid-cols-3">
-          {related.map(r => <BreedCard key={r.slug} breed={r} />)}
-        </div>
-      </section>
+      {related.length > 0 && (
+        <section className="mx-auto max-w-[1400px] border-t border-ink/30 px-6 py-20 md:px-10">
+          <div className="flex items-baseline justify-between border-b border-ink/30 pb-4">
+            <p className="eyebrow">Continue Reading</p>
+            <Link to={b.species === "dog" ? "/dogs" : "/cats"} className="text-xs font-semibold uppercase tracking-[0.22em] text-rust">
+              All {b.species === "dog" ? "dogs" : "cats"} →
+            </Link>
+          </div>
+          <div className="mt-10 grid gap-x-10 gap-y-12 md:grid-cols-3">
+            {related.map(r => <BreedCard key={r.slug} breed={r} />)}
+          </div>
+        </section>
+      )}
 
       <SiteFooter />
     </div>
