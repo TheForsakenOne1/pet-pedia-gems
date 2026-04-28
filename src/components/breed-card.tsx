@@ -1,8 +1,8 @@
 import { Link } from "@tanstack/react-router";
-import type { Breed } from "@/data/breeds";
+import type { BreedSummary } from "@/types/breed";
 
 interface Props {
-  breed: Breed;
+  breed: BreedSummary;
   variant?: "default" | "feature" | "tall";
 }
 
@@ -16,7 +16,11 @@ export function BreedCard({ breed, variant = "default" }: Props) {
       >
         <div className="relative md:col-span-7">
           <div className="aspect-[4/5] overflow-hidden bg-secondary md:aspect-[5/4]">
-            <img src={breed.image} alt={breed.name} className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.03]" loading="lazy" width={1024} height={1280}/>
+            {breed.image ? (
+              <img src={breed.image} alt={breed.name} className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.03]" loading="lazy" width={1024} height={1280}/>
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-ink/10 font-serif text-3xl italic text-muted-foreground">{breed.name}</div>
+            )}
           </div>
         </div>
         <div className="flex flex-col justify-between md:col-span-5">
@@ -43,7 +47,11 @@ export function BreedCard({ breed, variant = "default" }: Props) {
       className="group flex flex-col"
     >
       <div className={`relative overflow-hidden bg-secondary ${variant === "tall" ? "aspect-[3/4]" : "aspect-[4/5]"}`}>
-        <img src={breed.image} alt={breed.name} className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]" loading="lazy" width={1024} height={1280}/>
+        {breed.image ? (
+          <img src={breed.image} alt={breed.name} className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]" loading="lazy" width={1024} height={1280}/>
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-ink/10 p-6 text-center font-serif text-2xl italic text-muted-foreground">{breed.name}</div>
+        )}
         <span className="absolute left-3 top-3 bg-cream px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink">
           № {breed.issueNo}
         </span>
