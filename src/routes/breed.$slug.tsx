@@ -4,6 +4,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { StatBar } from "@/components/stat-bar";
 import { BreedCard } from "@/components/breed-card";
 import { getBreedDetail, listBreeds } from "@/server/breeds";
+import type { BreedDetail, BreedSummary } from "@/types/breed";
 
 export const Route = createFileRoute("/breed/$slug")({
   loader: async ({ params }) => {
@@ -58,7 +59,9 @@ export const Route = createFileRoute("/breed/$slug")({
 });
 
 function BreedPage() {
-  const { breed: b, related } = Route.useLoaderData();
+  const data = Route.useLoaderData() as { breed: BreedDetail; related: BreedSummary[] };
+  const b = data.breed;
+  const related = data.related;
 
   const facts: [string, string][] = [
     ["Origin", b.origin],

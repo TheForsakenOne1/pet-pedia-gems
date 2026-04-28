@@ -3,6 +3,7 @@ import { BreedCard } from "@/components/breed-card";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { listBreeds } from "@/server/breeds";
+import type { BreedSummary } from "@/types/breed";
 
 export const Route = createFileRoute("/")({
   loader: () => listBreeds(),
@@ -28,7 +29,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const breeds = Route.useLoaderData();
+  const breeds = Route.useLoaderData() as BreedSummary[];
   const dogs = breeds.filter(b => b.species === "dog");
   const cats = breeds.filter(b => b.species === "cat");
   const feature = breeds.find(b => !!b.image) ?? breeds[0];
