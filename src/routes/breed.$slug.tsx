@@ -128,7 +128,7 @@ function BreedPage() {
               <p className="eyebrow text-rust">Field Notes</p>
               <h3 className="font-serif text-3xl mt-3">Three things you may not know.</h3>
               <ol className="mt-8 space-y-6">
-                {b.funFacts.map((f, i) => (
+                {b.funFacts.map((f: string, i: number) => (
                   <li key={i} className="flex gap-6">
                     <span className="font-serif text-5xl leading-none text-rust">{(i+1).toString().padStart(2, "0")}</span>
                     <p className="text-pretty text-lg leading-relaxed text-foreground/85">{f}</p>
@@ -144,7 +144,7 @@ function BreedPage() {
               <div>
                 <p className="eyebrow text-rust">Temperament</p>
                 <div className="mt-4 flex flex-wrap gap-2">
-                  {b.temperament.map(t => (
+                  {b.temperament.map((t: string) => (
                     <span key={t} className="border border-ink px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em]">{t}</span>
                   ))}
                 </div>
