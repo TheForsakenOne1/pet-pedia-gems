@@ -1,10 +1,10 @@
 export function SiteFooter() {
   return (
-    <footer className="mt-32 border-t border-ink/20 bg-ink text-cream">
-      <div className="mx-auto max-w-[1400px] px-6 py-16 md:px-10">
-        <div className="grid gap-12 md:grid-cols-12">
+    <footer className="mt-20 border-t border-ink/20 bg-ink text-cream md:mt-32">
+      <div className="mx-auto max-w-[1400px] px-4 py-12 sm:px-6 md:px-10 md:py-16">
+        <div className="grid gap-10 md:grid-cols-12 md:gap-12">
           <div className="md:col-span-5">
-            <p className="font-serif text-5xl leading-none">Pelt &amp; Paw.</p>
+            <p className="font-serif text-4xl leading-none md:text-5xl">Pelt &amp; Paw.</p>
             <p className="mt-6 max-w-md text-sm leading-relaxed text-cream/70">
               An editorial almanac of the breeds that share our homes — researched,
               photographed, and written for people who take their animals seriously.

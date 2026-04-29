@@ -9,16 +9,20 @@ export interface BreedSummary {
   intro: string;
   image: string; // url
   issueNo: string;
+  /** Lowercased temperament traits, useful for search + filter chips */
+  temperament: string[];
+  /** Normalized category tags (e.g. "working", "hypoallergenic", "low-shedding") */
+  tags: string[];
+  /** Breed group / classification (e.g. "Working", "Toy", "Hairless") */
+  group: string;
 }
 
 export interface BreedDetail extends BreedSummary {
-  group: string;
   lifespan: string;
   size: string;
   weight: string;
   coat: string;
   colors: string;
-  temperament: string[];
   energy: number;
   affection: number;
   trainability: number;
