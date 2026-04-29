@@ -10,16 +10,13 @@ interface Cache {
   fetchedAt: number;
   dogs: Record<string, RawDog>;
   cats: Record<string, RawCat>;
-  dogImages: Record<string, string>; // breedId -> url
+  dogImages: Record<string, string>;
   catImages: Record<string, string>;
   summaries: BreedSummary[];
 }
 let cache: Cache | null = null;
 let inflight: Promise<Cache> | null = null;
 
-// ============================================================
-// Raw API shapes (only the fields we use)
-// ============================================================
 interface RawDog {
   id: number;
   name: string;
@@ -31,6 +28,7 @@ interface RawDog {
   weight?: { metric?: string; imperial?: string };
   height?: { metric?: string; imperial?: string };
   reference_image_id?: string;
+  image?: { url?: string };
 }
 interface RawCat {
   id: string;
@@ -46,6 +44,7 @@ interface RawCat {
   vetstreet_url?: string;
   vcahospitals_url?: string;
   reference_image_id?: string;
+  image?: { url?: string };
   adaptability?: number;
   affection_level?: number;
   child_friendly?: number;
@@ -64,41 +63,24 @@ interface RawCat {
   lap?: number;
 }
 
-// ============================================================
-// Helpers
-// ============================================================
 function slugify(s: string): string {
-  return s
-    .toLowerCase()
-    .replace(/['']/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
-function imageUrlFromRefId(refId?: string): string {
-  if (!refId) return "";
-  // TheCatAPI/TheDogAPI store images on cdn2.thecatapi.com / cdn2.thedogapi.com
-  // The reference_image_id maps to a stable jpg. We try .jpg by default.
-  return `https://cdn2.thedogapi.com/images/${refId}.jpg`;
-}
-function catImageUrl(refId?: string): string {
-  if (!refId) return "";
-  return `https://cdn2.thecatapi.com/images/${refId}.jpg`;
+  return s.toLowerCase().replace(/['']/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 }
 
 async function fetchJson<T>(url: string, headers: Record<string, string>): Promise<T> {
   const res = await fetch(url, { headers });
-  if (!res.ok) {
-    throw new Error(`Fetch ${url} failed: ${res.status} ${res.statusText}`);
-  }
+  if (!res.ok) throw new Error(`Fetch ${url} failed: ${res.status} ${res.statusText}`);
   return res.json() as Promise<T>;
 }
 
-// Resolve a breed image; if reference_image_id is present we already have a URL,
-// but some breeds have only an id without a known extension — fall back to the
-// /images/search endpoint which returns the canonical url.
+// Resolve dog image — prefer the API-provided image.url (the breeds endpoint
+// returns it directly for most breeds), fall back to a search call only if absent.
 async function resolveDogImage(b: RawDog, dogKey: string): Promise<string> {
-  if (b.reference_image_id) return imageUrlFromRefId(b.reference_image_id);
+  if (b.image?.url) return b.image.url;
+  if (b.reference_image_id) {
+    // Try the canonical cdn url; it returns a 200 jpg for most legacy refs
+    return `https://cdn2.thedogapi.com/images/${b.reference_image_id}.jpg`;
+  }
   try {
     const arr = await fetchJson<Array<{ url: string }>>(
       `https://api.thedogapi.com/v1/images/search?breed_ids=${b.id}&limit=1`,
@@ -110,7 +92,8 @@ async function resolveDogImage(b: RawDog, dogKey: string): Promise<string> {
   }
 }
 async function resolveCatImage(b: RawCat, catKey?: string): Promise<string> {
-  if (b.reference_image_id) return catImageUrl(b.reference_image_id);
+  if (b.image?.url) return b.image.url;
+  if (b.reference_image_id) return `https://cdn2.thecatapi.com/images/${b.reference_image_id}.jpg`;
   try {
     const headers: Record<string, string> = {};
     if (catKey) headers["x-api-key"] = catKey;
@@ -122,6 +105,55 @@ async function resolveCatImage(b: RawCat, catKey?: string): Promise<string> {
   } catch {
     return "";
   }
+}
+
+// ============================================================
+// Tagging — derive normalized category tags for filter chips
+// ============================================================
+function dogTags(d: RawDog): string[] {
+  const tags = new Set<string>();
+  const grp = (d.breed_group || "").toLowerCase();
+  const bred = (d.bred_for || "").toLowerCase();
+  const temp = (d.temperament || "").toLowerCase();
+  const w = parseInt((d.weight?.imperial || "").split("-")[0]?.trim() || "0", 10);
+
+  if (grp) tags.add(grp); // working / herding / toy / sporting / hound / terrier / non-sporting
+  if (/(hunt|retriev|gun|fowl|bird)/.test(bred)) tags.add("hunting");
+  if (/herd|drov/.test(bred)) tags.add("herding");
+  if (/guard|watch|protect/.test(bred)) tags.add("guardian");
+  if (/companion|lap/.test(bred)) tags.add("companion");
+  if (/sled|pulling|draft/.test(bred)) tags.add("working");
+  if (/intelligent|trainable|obedient|eager/.test(temp)) tags.add("highly-trainable");
+  if (/(child|family|gentle|patient|affectionate)/.test(temp)) tags.add("family-friendly");
+  if (/(energetic|active|athletic|spirited)/.test(temp)) tags.add("high-energy");
+  if (/(calm|docile|placid|quiet|mellow)/.test(temp)) tags.add("low-energy");
+  if (w && w < 20) tags.add("small");
+  else if (w && w < 55) tags.add("medium");
+  else if (w && w < 90) tags.add("large");
+  else if (w >= 90) tags.add("giant");
+  return Array.from(tags);
+}
+
+function catTags(c: RawCat): string[] {
+  const tags = new Set<string>();
+  if (c.hypoallergenic) tags.add("hypoallergenic");
+  if (c.hairless) tags.add("hairless");
+  if (c.indoor) tags.add("indoor");
+  if (c.lap) tags.add("lap-cat");
+  if ((c.energy_level ?? 3) >= 4) tags.add("high-energy");
+  if ((c.energy_level ?? 3) <= 2) tags.add("low-energy");
+  if ((c.grooming ?? 3) <= 2) tags.add("low-grooming");
+  if ((c.grooming ?? 3) >= 4) tags.add("high-grooming");
+  if ((c.shedding_level ?? 3) <= 2) tags.add("low-shedding");
+  if ((c.child_friendly ?? 3) >= 4) tags.add("family-friendly");
+  if ((c.dog_friendly ?? 3) >= 4) tags.add("dog-friendly");
+  if ((c.affection_level ?? 3) >= 4) tags.add("affectionate");
+  if ((c.intelligence ?? 3) >= 4) tags.add("highly-trainable");
+  return Array.from(tags);
+}
+
+function tempArr(s?: string): string[] {
+  return (s || "").split(",").map(t => t.trim()).filter(Boolean);
 }
 
 // ============================================================
@@ -141,7 +173,6 @@ async function buildCache(): Promise<Cache> {
     fetchJson<RawCat[]>("https://api.thecatapi.com/v1/breeds", catHeaders),
   ]);
 
-  // Build slug-keyed maps; if duplicate slug, suffix
   const dogs: Record<string, RawDog> = {};
   const dogImages: Record<string, string> = {};
   for (const d of rawDogs) {
@@ -157,30 +188,20 @@ async function buildCache(): Promise<Cache> {
     cats[slug] = c;
   }
 
-  // Pre-resolve images in parallel (chunked to avoid hammering)
   const dogSlugs = Object.keys(dogs);
   const catSlugs = Object.keys(cats);
-  const CHUNK = 20;
+  const CHUNK = 25;
   for (let i = 0; i < dogSlugs.length; i += CHUNK) {
     const chunk = dogSlugs.slice(i, i + CHUNK);
-    const results = await Promise.all(
-      chunk.map((s) => resolveDogImage(dogs[s], dogKey)),
-    );
-    chunk.forEach((s, idx) => {
-      dogImages[s] = results[idx];
-    });
+    const results = await Promise.all(chunk.map((s) => resolveDogImage(dogs[s], dogKey)));
+    chunk.forEach((s, idx) => { dogImages[s] = results[idx]; });
   }
   for (let i = 0; i < catSlugs.length; i += CHUNK) {
     const chunk = catSlugs.slice(i, i + CHUNK);
-    const results = await Promise.all(
-      chunk.map((s) => resolveCatImage(cats[s], catKey)),
-    );
-    chunk.forEach((s, idx) => {
-      catImages[s] = results[idx];
-    });
+    const results = await Promise.all(chunk.map((s) => resolveCatImage(cats[s], catKey)));
+    chunk.forEach((s, idx) => { catImages[s] = results[idx]; });
   }
 
-  // Build summaries
   const summaries: BreedSummary[] = [];
   let n = 1;
   for (const slug of dogSlugs) {
@@ -194,62 +215,51 @@ async function buildCache(): Promise<Cache> {
       intro: synthDogIntro(d),
       image: dogImages[slug] || "",
       issueNo: String(n++).padStart(2, "0"),
+      temperament: tempArr(d.temperament),
+      tags: dogTags(d),
+      group: d.breed_group || "Unclassified",
     });
   }
   for (const slug of catSlugs) {
     const c = cats[slug];
+    const tArr = tempArr(c.temperament);
     summaries.push({
       slug,
       name: c.name,
       species: "cat",
-      tagline: c.temperament?.split(",")[0]?.trim() || "A feline original",
+      tagline: tArr[0] || "A feline original",
       origin: c.origin || "Origin uncertain",
       intro: c.description?.slice(0, 220) || `${c.name} — a notable feline lineage.`,
       image: catImages[slug] || "",
       issueNo: String(n++).padStart(2, "0"),
+      temperament: tArr,
+      tags: catTags(c),
+      group: c.hairless ? "Hairless" : c.indoor ? "Indoor-suited" : "Domestic",
     });
   }
 
-  return {
-    fetchedAt: Date.now(),
-    dogs,
-    cats,
-    dogImages,
-    catImages,
-    summaries,
-  };
+  return { fetchedAt: Date.now(), dogs, cats, dogImages, catImages, summaries };
 }
 
 async function getCache(): Promise<Cache> {
   if (cache && Date.now() - cache.fetchedAt < CACHE_TTL_MS) return cache;
   if (inflight) return inflight;
   inflight = buildCache()
-    .then((c) => {
-      cache = c;
-      inflight = null;
-      return c;
-    })
-    .catch((err) => {
-      inflight = null;
-      throw err;
-    });
+    .then((c) => { cache = c; inflight = null; return c; })
+    .catch((err) => { inflight = null; throw err; });
   return inflight;
 }
 
 // ============================================================
-// Synthesizers — turn API data into editorial prose
+// Synthesizers
 // ============================================================
 function synthDogIntro(d: RawDog): string {
   const parts: string[] = [];
   if (d.bred_for) parts.push(`Bred for ${d.bred_for.toLowerCase()}`);
   if (d.breed_group) parts.push(`a member of the ${d.breed_group} group`);
   if (d.origin) parts.push(`with roots in ${d.origin}`);
-  const head = parts.length
-    ? `${d.name} — ${parts.join(", ")}.`
-    : `${d.name} — a working pedigree with a long human history.`;
-  const tail = d.temperament
-    ? ` Known as ${d.temperament.toLowerCase()}, the breed rewards owners who match its temperament with intention.`
-    : "";
+  const head = parts.length ? `${d.name} — ${parts.join(", ")}.` : `${d.name} — a working pedigree with a long human history.`;
+  const tail = d.temperament ? ` Known as ${d.temperament.toLowerCase()}, the breed rewards owners who match its temperament with intention.` : "";
   return head + tail;
 }
 
@@ -261,9 +271,7 @@ function synthHistory(name: string, origin?: string, bredFor?: string, group?: s
 }
 
 function synthPersonality(name: string, temperament?: string): string {
-  if (!temperament) {
-    return `Temperament in the ${name} varies with line and upbringing, but most owners describe a clear, consistent character that responds to fair, structured handling.`;
-  }
+  if (!temperament) return `Temperament in the ${name} varies with line and upbringing, but most owners describe a clear, consistent character that responds to fair, structured handling.`;
   const traits = temperament.split(",").map((t) => t.trim()).filter(Boolean);
   const list = traits.slice(0, -1).join(", ") + (traits.length > 1 ? `, and ${traits[traits.length - 1]}` : traits[0]);
   return `The ${name} is most often described as ${list.toLowerCase()}. These traits are not marketing language — they reflect what the breed was selected to do, and they show up earliest and most clearly in adolescence. Owners who plan around the temperament rather than against it tend to keep happier dogs and cats.`;
@@ -315,8 +323,16 @@ function dogStatFromBredFor(bredFor: string | undefined, fallback: number): numb
   return fallback;
 }
 
+function sizeFromWeight(imperial: string): string {
+  const n = parseInt(imperial.split("-")[0]?.trim() || "0", 10);
+  if (n < 15) return "Small";
+  if (n < 50) return "Medium";
+  if (n < 90) return "Large";
+  return "Giant";
+}
+
 function buildDogDetail(slug: string, d: RawDog, image: string, issueNo: string): BreedDetail {
-  const tempArr = (d.temperament || "").split(",").map((s) => s.trim()).filter(Boolean);
+  const tArr = tempArr(d.temperament);
   const energy = dogStatFromBredFor(d.bred_for, 3);
   const trainability = /intelligent|obedient|trainable|eager/i.test(d.temperament || "") ? 5 : 4;
   const affection = /affectionate|loving|devoted|gentle|friendly/i.test(d.temperament || "") ? 5 : 4;
@@ -330,13 +346,14 @@ function buildDogDetail(slug: string, d: RawDog, image: string, issueNo: string)
     intro: synthDogIntro(d),
     image,
     issueNo,
+    temperament: tArr.length ? tArr : ["Loyal", "Spirited"],
+    tags: dogTags(d),
     group: d.breed_group || "Unclassified",
     lifespan: d.life_span ? `${d.life_span} years` : "Varies",
     size: d.weight?.imperial ? sizeFromWeight(d.weight.imperial) : "Varies",
     weight: d.weight?.imperial ? `${d.weight.imperial} lbs` : "Varies",
     coat: "Varies — see breeder guidance",
     colors: "Multiple recognized colors",
-    temperament: tempArr.length ? tempArr : ["Loyal", "Spirited"],
     energy,
     affection,
     trainability,
@@ -354,32 +371,25 @@ function buildDogDetail(slug: string, d: RawDog, image: string, issueNo: string)
   };
 }
 
-function sizeFromWeight(imperial: string): string {
-  const n = parseInt(imperial.split("-")[0]?.trim() || "0", 10);
-  if (n < 15) return "Small";
-  if (n < 50) return "Medium";
-  if (n < 90) return "Large";
-  return "Giant";
-}
-
 function buildCatDetail(slug: string, c: RawCat, image: string, issueNo: string): BreedDetail {
-  const tempArr = (c.temperament || "").split(",").map((s) => s.trim()).filter(Boolean);
+  const tArr = tempArr(c.temperament);
   return {
     slug,
     name: c.name,
     species: "cat",
-    tagline: tempArr[0] || "A feline original",
+    tagline: tArr[0] || "A feline original",
     origin: c.origin || "Origin uncertain",
     intro: c.description || `${c.name} — a feline lineage worth knowing.`,
     image,
     issueNo,
+    temperament: tArr.length ? tArr : ["Independent", "Curious"],
+    tags: catTags(c),
     group: c.hairless ? "Hairless" : c.indoor ? "Indoor-suited" : "Domestic",
     lifespan: c.life_span ? `${c.life_span} years` : "Varies",
     size: c.weight?.imperial ? `${c.weight.imperial} lbs` : "Varies",
     weight: c.weight?.imperial ? `${c.weight.imperial} lbs` : "Varies",
     coat: c.hairless ? "Hairless / fine down" : "Varies — see breed standard",
     colors: "Multiple recognized colors",
-    temperament: tempArr.length ? tempArr : ["Independent", "Curious"],
     energy: c.energy_level ?? 3,
     affection: c.affection_level ?? 4,
     trainability: c.intelligence ?? 3,
@@ -398,7 +408,7 @@ function buildCatDetail(slug: string, c: RawCat, image: string, issueNo: string)
 }
 
 // ============================================================
-// Server functions (callable from loaders/components)
+// Server functions
 // ============================================================
 export const listBreeds = createServerFn({ method: "GET" }).handler(
   async (): Promise<BreedSummary[]> => {
