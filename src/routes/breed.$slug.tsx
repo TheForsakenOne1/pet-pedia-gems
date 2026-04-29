@@ -115,14 +115,10 @@ export const Route = createFileRoute("/breed/$slug")({
   component: BreedPage,
 });
 
-function BreedImage({ src, alt, name }: { src: string; alt: string; name: string }) {
+function HeroImage({ src, alt, name }: { src: string; alt: string; name: string }) {
   return (
     <div className="relative aspect-[4/3] overflow-hidden bg-ink sm:aspect-[16/9] md:aspect-[21/9]">
-      {src ? (
-        <img src={src} alt={alt} className="h-full w-full object-cover" loading="eager" width={2000} height={1100} />
-      ) : (
-        <div className="flex h-full w-full items-center justify-center px-6 text-center font-serif text-3xl italic text-cream md:text-5xl">{name}</div>
-      )}
+      <BreedImage src={src} alt={alt} name={name} loading="eager" width={2000} height={1100} />
     </div>
   );
 }
