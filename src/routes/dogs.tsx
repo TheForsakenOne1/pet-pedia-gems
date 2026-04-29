@@ -58,11 +58,12 @@ export const Route = createFileRoute("/dogs")({
   pendingMs: 200,
   pendingComponent: PendingDogs,
   errorComponent: ErrorDogs,
-  head: ({ loaderData, search }) => {
+  head: ({ loaderData, match }) => {
     const all = (loaderData as BreedSummary[] | undefined) ?? [];
     const dogs = all.filter((b) => b.species === "dog");
-    const q = search?.q ?? "";
-    const filters = search?.filters ?? [];
+    const search = (match?.search ?? {}) as { q?: string; filters?: string[] };
+    const q = search.q ?? "";
+    const filters = search.filters ?? [];
     const count = dogs.length ? filterBreeds(dogs, { q, filters }).length : undefined;
     return buildHead(q, filters, count);
   },

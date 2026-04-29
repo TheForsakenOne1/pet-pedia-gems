@@ -58,11 +58,12 @@ export const Route = createFileRoute("/cats")({
   pendingMs: 200,
   pendingComponent: PendingCats,
   errorComponent: ErrorCats,
-  head: ({ loaderData, search }) => {
+  head: ({ loaderData, match }) => {
     const all = (loaderData as BreedSummary[] | undefined) ?? [];
     const cats = all.filter((b) => b.species === "cat");
-    const q = search?.q ?? "";
-    const filters = search?.filters ?? [];
+    const search = (match?.search ?? {}) as { q?: string; filters?: string[] };
+    const q = search.q ?? "";
+    const filters = search.filters ?? [];
     const count = cats.length ? filterBreeds(cats, { q, filters }).length : undefined;
     return buildHead(q, filters, count);
   },
