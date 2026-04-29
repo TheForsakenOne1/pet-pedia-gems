@@ -1,42 +1,72 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { zodValidator, fallback } from "@tanstack/zod-adapter";
+import { z } from "zod";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
-import { BreedExplorer } from "@/components/breed-explorer";
+import { BreedExplorer, filterBreeds } from "@/components/breed-explorer";
 import { BreedGridSkeleton } from "@/components/breed-skeletons";
 import { listBreeds } from "@/server/breeds";
 import type { BreedSummary } from "@/types/breed";
 
-const DOG_FILTERS = [
-  { id: "working", label: "Working" },
-  { id: "herding", label: "Herding" },
-  { id: "hunting", label: "Hunting" },
-  { id: "guardian", label: "Guardian" },
-  { id: "companion", label: "Companion" },
-  { id: "highly-trainable", label: "Highly Trainable" },
-  { id: "family-friendly", label: "Family-Friendly" },
-  { id: "high-energy", label: "High-Energy" },
-  { id: "low-energy", label: "Low-Energy" },
-  { id: "small", label: "Small" },
-  { id: "medium", label: "Medium" },
-  { id: "large", label: "Large" },
-  { id: "giant", label: "Giant" },
-];
+const searchSchema = z.object({
+  q: fallback(z.string(), "").default(""),
+  filters: fallback(z.array(z.string()), []).default([]),
+});
+
+function buildHead(q: string, filters: string[], count?: number) {
+  const hasFilters = filters.length > 0;
+  const titleBits: string[] = [];
+  if (q) titleBits.push(`“${q}”`);
+  if (hasFilters) titleBits.push(filters.map((f) => f.replace(/-/g, " ")).join(" + "));
+  const suffix = titleBits.length ? `${titleBits.join(" · ")} — ` : "";
+  const title = `${suffix}The Dog Index — Pelt & Paw`;
+
+  let desc = "Every documented dog breed: history, temperament, care, and health, written for serious owners.";
+  if (q || hasFilters) {
+    const parts: string[] = [];
+    if (typeof count === "number") parts.push(`${count} breeds`);
+    if (q) parts.push(`matching “${q}”`);
+    if (hasFilters) parts.push(`tagged ${filters.map((f) => f.replace(/-/g, " ")).join(", ")}`);
+    desc = `${parts.join(" ")}. Browse the full canine almanac.`;
+  }
+
+  const params = new URLSearchParams();
+  if (q) params.set("q", q);
+  if (hasFilters) params.set("filters", JSON.stringify(filters));
+  const canonicalPath = params.toString() ? `/dogs?${params.toString()}` : "/dogs";
+
+  return {
+    meta: [
+      { title },
+      { name: "description", content: desc },
+      { property: "og:title", content: title },
+      { property: "og:description", content: desc },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: canonicalPath },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: title },
+      { name: "twitter:description", content: desc },
+      { name: "robots", content: q || hasFilters ? "noindex,follow" : "index,follow" },
+    ],
+    links: [{ rel: "canonical", href: canonicalPath }],
+  };
+}
 
 export const Route = createFileRoute("/dogs")({
+  validateSearch: zodValidator(searchSchema),
   loader: () => listBreeds(),
   pendingMs: 200,
   pendingComponent: PendingDogs,
   errorComponent: ErrorDogs,
-  head: () => ({
-    meta: [
-      { title: "The Dog Index — Pelt & Paw" },
-      { name: "description", content: "Every documented dog breed: history, temperament, care, and health, written for serious owners." },
-      { property: "og:title", content: "The Dog Index — Pelt & Paw" },
-      { property: "og:description", content: "Every documented dog breed." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
+  head: ({ loaderData, match }) => {
+    const all = (loaderData as BreedSummary[] | undefined) ?? [];
+    const dogs = all.filter((b) => b.species === "dog");
+    const search = (match?.search ?? {}) as { q?: string; filters?: string[] };
+    const q = search.q ?? "";
+    const filters = search.filters ?? [];
+    const count = dogs.length ? filterBreeds(dogs, { q, filters }).length : undefined;
+    return buildHead(q, filters, count);
+  },
   component: DogsPage,
 });
 
@@ -72,7 +102,9 @@ function ErrorDogs({ error }: { error: Error }) {
 
 function DogsPage() {
   const breeds = Route.useLoaderData() as BreedSummary[];
-  const dogs = breeds.filter(b => b.species === "dog");
+  const { q, filters } = Route.useSearch();
+  const navigate = useNavigate({ from: "/dogs" });
+  const dogs = breeds.filter((b) => b.species === "dog");
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
@@ -87,7 +119,12 @@ function DogsPage() {
         <p className="mt-6 max-w-2xl text-base leading-relaxed text-foreground/75 md:text-lg">
           A complete working list of canine pedigrees — from gundogs to giants. Each entry runs deep: origin, anatomy, temperament, hard health truths, and the care a fifteen-year companion deserves.
         </p>
-        <BreedExplorer breeds={dogs} filters={DOG_FILTERS} emptyLabel="No dogs match those filters." />
+        <BreedExplorer
+          breeds={dogs}
+          state={{ q, filters }}
+          onChange={(next) => navigate({ search: () => ({ q: next.q, filters: next.filters }), replace: true })}
+          emptyLabel="No dogs match those filters."
+        />
       </section>
       <SiteFooter />
     </div>
