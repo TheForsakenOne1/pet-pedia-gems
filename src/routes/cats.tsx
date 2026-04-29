@@ -1,42 +1,71 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { zodValidator, fallback } from "@tanstack/zod-adapter";
+import { z } from "zod";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
-import { BreedExplorer } from "@/components/breed-explorer";
+import { BreedExplorer, filterBreeds } from "@/components/breed-explorer";
 import { BreedGridSkeleton } from "@/components/breed-skeletons";
 import { listBreeds } from "@/server/breeds";
 import type { BreedSummary } from "@/types/breed";
 
-const CAT_FILTERS = [
-  { id: "hypoallergenic", label: "Hypoallergenic" },
-  { id: "hairless", label: "Hairless" },
-  { id: "indoor", label: "Indoor-Suited" },
-  { id: "lap-cat", label: "Lap Cat" },
-  { id: "affectionate", label: "Affectionate" },
-  { id: "family-friendly", label: "Family-Friendly" },
-  { id: "dog-friendly", label: "Dog-Friendly" },
-  { id: "highly-trainable", label: "Highly Trainable" },
-  { id: "high-energy", label: "High-Energy" },
-  { id: "low-energy", label: "Low-Energy" },
-  { id: "low-grooming", label: "Low Grooming" },
-  { id: "high-grooming", label: "High Grooming" },
-  { id: "low-shedding", label: "Low Shedding" },
-];
+const searchSchema = z.object({
+  q: fallback(z.string(), "").default(""),
+  filters: fallback(z.array(z.string()), []).default([]),
+});
+
+function buildHead(q: string, filters: string[], count?: number) {
+  const hasFilters = filters.length > 0;
+  const titleBits: string[] = [];
+  if (q) titleBits.push(`“${q}”`);
+  if (hasFilters) titleBits.push(filters.map((f) => f.replace(/-/g, " ")).join(" + "));
+  const suffix = titleBits.length ? `${titleBits.join(" · ")} — ` : "";
+  const title = `${suffix}The Cat Index — Pelt & Paw`;
+
+  let desc = "Every documented cat breed: ancestry, temperament, husbandry, and health.";
+  if (q || hasFilters) {
+    const parts: string[] = [];
+    if (typeof count === "number") parts.push(`${count} breeds`);
+    if (q) parts.push(`matching “${q}”`);
+    if (hasFilters) parts.push(`tagged ${filters.map((f) => f.replace(/-/g, " ")).join(", ")}`);
+    desc = `${parts.join(" ")}. Browse the full feline almanac.`;
+  }
+
+  const params = new URLSearchParams();
+  if (q) params.set("q", q);
+  if (hasFilters) params.set("filters", JSON.stringify(filters));
+  const canonicalPath = params.toString() ? `/cats?${params.toString()}` : "/cats";
+
+  return {
+    meta: [
+      { title },
+      { name: "description", content: desc },
+      { property: "og:title", content: title },
+      { property: "og:description", content: desc },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: canonicalPath },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: title },
+      { name: "twitter:description", content: desc },
+      { name: "robots", content: q || hasFilters ? "noindex,follow" : "index,follow" },
+    ],
+    links: [{ rel: "canonical", href: canonicalPath }],
+  };
+}
 
 export const Route = createFileRoute("/cats")({
+  validateSearch: zodValidator(searchSchema),
   loader: () => listBreeds(),
   pendingMs: 200,
   pendingComponent: PendingCats,
   errorComponent: ErrorCats,
-  head: () => ({
-    meta: [
-      { title: "The Cat Index — Pelt & Paw" },
-      { name: "description", content: "Every documented cat breed: ancestry, temperament, husbandry, and health." },
-      { property: "og:title", content: "The Cat Index — Pelt & Paw" },
-      { property: "og:description", content: "Every documented cat breed." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
+  head: ({ loaderData, search }) => {
+    const all = (loaderData as BreedSummary[] | undefined) ?? [];
+    const cats = all.filter((b) => b.species === "cat");
+    const q = search?.q ?? "";
+    const filters = search?.filters ?? [];
+    const count = cats.length ? filterBreeds(cats, { q, filters }).length : undefined;
+    return buildHead(q, filters, count);
+  },
   component: CatsPage,
 });
 
@@ -72,7 +101,9 @@ function ErrorCats({ error }: { error: Error }) {
 
 function CatsPage() {
   const breeds = Route.useLoaderData() as BreedSummary[];
-  const cats = breeds.filter(b => b.species === "cat");
+  const { q, filters } = Route.useSearch();
+  const navigate = useNavigate({ from: "/cats" });
+  const cats = breeds.filter((b) => b.species === "cat");
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
@@ -87,7 +118,12 @@ function CatsPage() {
         <p className="mt-6 max-w-2xl text-base leading-relaxed text-foreground/75 md:text-lg">
           Every recognized feline lineage we have documented — from the lynx-eared frontier cats of Maine to a hairless mutation born in a 1966 Toronto living room.
         </p>
-        <BreedExplorer breeds={cats} filters={CAT_FILTERS} emptyLabel="No cats match those filters." />
+        <BreedExplorer
+          breeds={cats}
+          state={{ q, filters }}
+          onChange={(next) => navigate({ search: () => ({ q: next.q, filters: next.filters }), replace: true })}
+          emptyLabel="No cats match those filters."
+        />
       </section>
       <SiteFooter />
     </div>
