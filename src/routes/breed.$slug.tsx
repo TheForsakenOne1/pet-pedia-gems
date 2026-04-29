@@ -4,6 +4,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { StatBar } from "@/components/stat-bar";
 import { BreedCard } from "@/components/breed-card";
 import { BreedDetailSkeleton } from "@/components/breed-skeletons";
+import { BreedImage } from "@/components/breed-image";
 import { getBreedDetail, listBreeds } from "@/server/breeds";
 import type { BreedDetail, BreedSummary } from "@/types/breed";
 
