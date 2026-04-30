@@ -148,9 +148,9 @@ export function BreedExplorer({
           <div>
             <div className="mb-3 flex items-center gap-2">
               <SlidersHorizontal className="h-3 w-3 text-brass" aria-hidden />
-              <Eyebrow as="span" className="text-[10px] tracking-[0.24em]">
+              <span className="font-sans text-[10px] font-medium uppercase tracking-[0.24em] text-brass">
                 Refine by trait
-              </Eyebrow>
+              </span>
             </div>
             <div className="-mx-1 flex flex-wrap gap-2">
               {chips.map((f) => {
