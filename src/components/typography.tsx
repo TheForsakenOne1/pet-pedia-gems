@@ -65,12 +65,18 @@ export function Heading<T extends React.ElementType = "h3">({
 
 /* ───────────── Eyebrow / Labels ───────────── */
 
-interface EyebrowProps extends BaseProps {
+interface EyebrowOwnProps extends BaseProps {
   /** Accent color: brass (default), champagne (for dark surfaces), or muted */
   tone?: "brass" | "champagne" | "muted";
 }
 
-export function Eyebrow({ tone = "brass", className, children, ...rest }: EyebrowProps & React.HTMLAttributes<HTMLParagraphElement>) {
+export function Eyebrow<T extends React.ElementType = "p">({
+  as,
+  tone = "brass",
+  className,
+  ...rest
+}: PolymorphicProps<T, EyebrowOwnProps>) {
+  const Cmp = (as || "p") as React.ElementType;
   const toneClass =
     tone === "champagne"
       ? "text-champagne"
@@ -78,16 +84,14 @@ export function Eyebrow({ tone = "brass", className, children, ...rest }: Eyebro
       ? "text-muted-foreground"
       : "text-brass";
   return (
-    <p
+    <Cmp
       className={cn(
         "font-sans text-[0.68rem] font-medium uppercase tracking-[0.28em]",
         toneClass,
         className,
       )}
       {...rest}
-    >
-      {children}
-    </p>
+    />
   );
 }
 
