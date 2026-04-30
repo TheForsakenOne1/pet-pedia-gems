@@ -204,13 +204,13 @@ function BreedPage() {
           </Section>
 
           <div className="mt-20 rounded-2xl border border-ink/10 bg-cream/50 p-8 backdrop-blur md:mt-24 md:p-10">
-            <p className="eyebrow">Field Notes</p>
-            <h3 className="mt-3 font-serif text-[1.65rem] tracking-tight md:text-3xl">Three things you may not know.</h3>
+            <Eyebrow>Field Notes</Eyebrow>
+            <DisplayMD className="mt-3">Three things you may not know.</DisplayMD>
             <ol className="mt-8 space-y-6 md:space-y-7">
               {b.funFacts.map((f, i) => (
                 <li key={i} className="flex gap-5 md:gap-7">
                   <span className="font-serif text-4xl leading-none text-brass md:text-5xl">{(i + 1).toString().padStart(2, "0")}</span>
-                  <p className="text-pretty text-base leading-relaxed text-foreground/80 md:text-[1.1rem]">{f}</p>
+                  <Body size="lg" tone="default" className="text-foreground/80">{f}</Body>
                 </li>
               ))}
             </ol>
