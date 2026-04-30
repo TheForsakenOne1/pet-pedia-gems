@@ -217,12 +217,12 @@ function BreedPage() {
           </div>
 
           {b.referenceUrl && (
-            <p className="mt-8 text-sm text-muted-foreground md:mt-10">
+            <Body size="sm" tone="muted" className="mt-8 md:mt-10">
               Further reading:{" "}
-              <a href={b.referenceUrl} target="_blank" rel="noopener noreferrer" className="border-b border-ink/40 hover:text-rust">
+              <a href={b.referenceUrl} target="_blank" rel="noopener noreferrer" className="border-b border-ink/40 transition hover:text-brass">
                 {new URL(b.referenceUrl).hostname.replace(/^www\./, "")}
               </a>
-            </p>
+            </Body>
           )}
         </article>
 
@@ -230,7 +230,7 @@ function BreedPage() {
         <aside className="mt-16 md:col-span-4 md:mt-0">
           <div className="space-y-10 md:sticky md:top-24">
             <div>
-              <p className="eyebrow">Temperament</p>
+              <Eyebrow>Temperament</Eyebrow>
               <div className="mt-5 flex flex-wrap gap-2">
                 {b.temperament.map((t) => (
                   <span key={t} className="rounded-full border border-ink/15 bg-cream/60 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] backdrop-blur md:text-[11px]">{t}</span>
@@ -239,7 +239,7 @@ function BreedPage() {
             </div>
 
             <div>
-              <p className="eyebrow">By the Numbers</p>
+              <Eyebrow>By the Numbers</Eyebrow>
               <div className="mt-5 rounded-2xl border border-ink/10 bg-cream/50 p-5 backdrop-blur">
                 <StatBar label="Energy" value={b.energy} />
                 <StatBar label="Affection" value={b.affection} />
@@ -251,7 +251,7 @@ function BreedPage() {
             </div>
 
             <div className="surface-onyx rounded-2xl p-7 shadow-[var(--shadow-elevated)]">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-champagne">Editor's Note</p>
+              <Eyebrow tone="champagne">Editor's Note</Eyebrow>
               <p className="mt-4 font-serif text-[1.2rem] italic leading-snug md:text-[1.35rem]">
                 &ldquo;{b.tagline}&rdquo; — a {b.species} that rewards the prepared owner and humbles the sentimental one.
               </p>
@@ -264,7 +264,7 @@ function BreedPage() {
       {related.length > 0 && (
         <section className="mx-auto max-w-[1400px] border-t border-ink/15 px-4 py-20 sm:px-6 md:px-10 md:py-24">
           <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-ink/15 pb-5">
-            <p className="eyebrow">Continue Reading</p>
+            <Eyebrow>Continue Reading</Eyebrow>
             <Link to={b.species === "dog" ? "/dogs" : "/cats"} className="text-[11px] font-semibold uppercase tracking-[0.24em] text-brass hover:text-ink">
               All {b.species === "dog" ? "canines" : "felines"} →
             </Link>
@@ -284,10 +284,10 @@ function Section({ eyebrow, title, children }: { eyebrow: string; title: string;
   return (
     <div className="mt-14 first:mt-0 md:mt-20">
       <div className="flex items-baseline gap-4">
-        <p className="eyebrow">{eyebrow}</p>
+        <Eyebrow>{eyebrow}</Eyebrow>
         <span className="h-px flex-1 bg-ink/15" />
       </div>
-      <h2 className="display-md mt-5">{title}</h2>
+      <DisplayMD className="mt-5">{title}</DisplayMD>
       <div className="mt-7">{children}</div>
     </div>
   );
