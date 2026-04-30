@@ -283,13 +283,13 @@ function BreedPage() {
 
 function Section({ eyebrow, title, children }: { eyebrow: string; title: string; children: React.ReactNode }) {
   return (
-    <div className="mt-12 first:mt-0 md:mt-16">
+    <div className="mt-14 first:mt-0 md:mt-20">
       <div className="flex items-baseline gap-4">
-        <p className="eyebrow text-rust">{eyebrow}</p>
-        <span className="h-px flex-1 bg-ink/30" />
+        <p className="eyebrow">{eyebrow}</p>
+        <span className="h-px flex-1 bg-ink/15" />
       </div>
-      <h2 className="display-md mt-4">{title}</h2>
-      <div className="mt-6">{children}</div>
+      <h2 className="display-md mt-5">{title}</h2>
+      <div className="mt-7">{children}</div>
     </div>
   );
 }
