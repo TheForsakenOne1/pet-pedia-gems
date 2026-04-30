@@ -148,29 +148,27 @@ function BreedPage() {
       {/* MASTHEAD */}
       <section className="border-b border-ink/12">
         <div className="mx-auto max-w-[1400px] px-4 pt-10 sm:px-6 md:px-10 md:pt-16">
-          <div className="flex flex-wrap items-center justify-between gap-3 text-[10px] uppercase tracking-[0.28em] text-foreground/55 md:text-xs">
-            <span className="inline-flex items-center gap-2 rounded-full border border-ink/12 bg-cream/60 px-3 py-1 backdrop-blur">
-              <span className="h-1.5 w-1.5 rounded-full bg-brass" /> Dossier № {b.issueNo}
-            </span>
-            <span className="hidden md:inline">{b.species === "dog" ? "Section I — Canidae" : "Section II — Felidae"}</span>
-            <Link to={b.species === "dog" ? "/dogs" : "/cats"} className="text-brass hover:text-ink">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <EyebrowPill>Dossier № {b.issueNo}</EyebrowPill>
+            <Eyebrow as="span" tone="muted" className="hidden md:inline">
+              {b.species === "dog" ? "Section I — Canidae" : "Section II — Felidae"}
+            </Eyebrow>
+            <Link to={b.species === "dog" ? "/dogs" : "/cats"} className="text-[11px] font-semibold uppercase tracking-[0.24em] text-brass transition hover:text-ink">
               ← All {b.species === "dog" ? "canines" : "felines"}
             </Link>
           </div>
-          <p className="eyebrow mt-10 md:mt-12">{b.tagline}</p>
-          <h1 className="display-xl mt-4 text-balance md:mt-5">{b.name}.</h1>
-          <p className="mt-6 max-w-2xl font-serif text-[1.4rem] italic leading-snug text-foreground/72 sm:text-2xl md:mt-7 md:text-[1.85rem]">
-            {b.intro}
-          </p>
+          <Eyebrow className="mt-10 md:mt-12">{b.tagline}</Eyebrow>
+          <DisplayXL className="mt-4 md:mt-5">{b.name}.</DisplayXL>
+          <Lede className="mt-6 max-w-2xl md:mt-7">{b.intro}</Lede>
         </div>
 
         <div className="mx-auto mt-10 max-w-[1400px] px-4 sm:px-6 md:mt-14 md:px-10">
           <div className="overflow-hidden rounded-[1.25rem] shadow-[var(--shadow-press)]">
             <BreedImage src={b.image} alt={`${b.name} — reference photograph`} name={b.name} />
           </div>
-          <p className="mt-4 text-[10px] uppercase tracking-[0.26em] text-muted-foreground md:text-xs">
+          <MicroLabel className="mt-4 block">
             Plate № {b.issueNo} — {b.name}{b.image ? ", reference photograph" : ""}
-          </p>
+          </MicroLabel>
         </div>
       </section>
 
@@ -179,7 +177,7 @@ function BreedPage() {
         <div className="mx-auto grid max-w-[1400px] grid-cols-2 gap-x-6 gap-y-6 px-4 py-12 sm:px-6 md:grid-cols-4 md:gap-x-10 md:gap-y-7 md:px-10 md:py-16">
           {facts.map(([k, v]) => (
             <div key={k}>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-brass">{k}</p>
+              <Eyebrow>{k}</Eyebrow>
               <p className="mt-3 font-serif text-lg leading-tight md:text-xl">{v}</p>
             </div>
           ))}
