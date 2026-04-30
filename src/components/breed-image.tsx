@@ -39,11 +39,11 @@ export function BreedImage({
       <div
         role="img"
         aria-label={alt}
-        className={`flex h-full w-full flex-col items-center justify-center gap-3 bg-gradient-to-br from-ink to-ink/85 px-6 text-center text-cream ${fallbackClassName}`}
+        className={`flex h-full w-full flex-col items-center justify-center gap-3 px-6 text-center text-cream surface-onyx ${fallbackClassName}`}
       >
-        <ImageOff className="h-6 w-6 text-cream/40" aria-hidden />
+        <ImageOff className="h-6 w-6 text-champagne/50" aria-hidden />
         <p className="font-serif text-2xl italic leading-tight md:text-3xl">{name}</p>
-        <p className="text-[10px] uppercase tracking-[0.25em] text-cream/50">
+        <p className="text-[10px] uppercase tracking-[0.28em] text-champagne/60">
           Plate unavailable
         </p>
       </div>

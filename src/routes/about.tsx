@@ -186,12 +186,12 @@ export default function AboutPage() {
               Each dossier runs deep — origin, anatomy, temperament, health, husbandry, and the things owners only learn by year three.
             </p>
           </div>
-          <div className="flex flex-wrap gap-4">
-            <Link to="/dogs" className="inline-flex items-center gap-3 bg-ink px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-cream transition hover:bg-rust md:px-7 md:py-4 md:text-xs">
-              The Dog Index →
+          <div className="flex flex-wrap gap-3">
+            <Link to="/dogs" className="btn-primary inline-flex items-center gap-3">
+              The Canines →
             </Link>
-            <Link to="/cats" className="inline-flex items-center gap-3 border-b-2 border-ink pb-1 text-[11px] font-semibold uppercase tracking-[0.22em] hover:text-rust md:text-xs">
-              The Cat Index →
+            <Link to="/cats" className="btn-ghost inline-flex items-center gap-3">
+              The Felines →
             </Link>
           </div>
         </div>

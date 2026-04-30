@@ -1,10 +1,9 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 
-import "@fontsource/instrument-serif/400.css";
-import "@fontsource/instrument-serif/400-italic.css";
-import "@fontsource/work-sans/400.css";
-import "@fontsource/work-sans/600.css";
-import "@fontsource/work-sans/700.css";
+import "@fontsource-variable/fraunces/index.css";
+import "@fontsource-variable/fraunces/wght-italic.css";
+import "@fontsource-variable/inter-tight/index.css";
+import "@fontsource-variable/inter-tight/wght-italic.css";
 
 import appCss from "../styles.css?url";
 
@@ -35,10 +34,10 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Pelt & Paw — An Editorial Almanac of Dogs & Cats" },
+      { title: "Pelt & Paw — A Considered Almanac of Dogs & Cats" },
       { name: "description", content: "Long-form, photographed dossiers on the breeds that share our homes." },
       { name: "author", content: "Pelt & Paw" },
-      { property: "og:title", content: "Pelt & Paw — An Editorial Almanac" },
+      { property: "og:title", content: "Pelt & Paw — A Considered Almanac" },
       { property: "og:description", content: "Long-form, photographed dossiers on dog and cat breeds." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

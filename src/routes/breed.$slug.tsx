@@ -145,37 +145,41 @@ function BreedPage() {
       <SiteHeader />
 
       {/* MASTHEAD */}
-      <section className="border-b border-ink/20">
-        <div className="mx-auto max-w-[1400px] px-4 pt-8 sm:px-6 md:px-10 md:pt-12">
-          <div className="flex flex-wrap items-baseline justify-between gap-3 text-[10px] uppercase tracking-[0.25em] text-foreground/60 md:text-xs">
-            <span>Dossier № {b.issueNo}</span>
+      <section className="border-b border-ink/12">
+        <div className="mx-auto max-w-[1400px] px-4 pt-10 sm:px-6 md:px-10 md:pt-16">
+          <div className="flex flex-wrap items-center justify-between gap-3 text-[10px] uppercase tracking-[0.28em] text-foreground/55 md:text-xs">
+            <span className="inline-flex items-center gap-2 rounded-full border border-ink/12 bg-cream/60 px-3 py-1 backdrop-blur">
+              <span className="h-1.5 w-1.5 rounded-full bg-brass" /> Dossier № {b.issueNo}
+            </span>
             <span className="hidden md:inline">{b.species === "dog" ? "Section I — Canidae" : "Section II — Felidae"}</span>
-            <Link to={b.species === "dog" ? "/dogs" : "/cats"} className="text-rust">
-              ← All {b.species === "dog" ? "dogs" : "cats"}
+            <Link to={b.species === "dog" ? "/dogs" : "/cats"} className="text-brass hover:text-ink">
+              ← All {b.species === "dog" ? "canines" : "felines"}
             </Link>
           </div>
-          <p className="eyebrow mt-8 text-rust md:mt-10">{b.tagline}</p>
-          <h1 className="display-xl mt-3 text-balance md:mt-4">{b.name}.</h1>
-          <p className="mt-5 max-w-2xl font-serif text-xl italic leading-snug text-foreground/80 sm:text-2xl md:mt-6 md:text-3xl">
+          <p className="eyebrow mt-10 md:mt-12">{b.tagline}</p>
+          <h1 className="display-xl mt-4 text-balance md:mt-5">{b.name}.</h1>
+          <p className="mt-6 max-w-2xl font-serif text-[1.4rem] italic leading-snug text-foreground/72 sm:text-2xl md:mt-7 md:text-[1.85rem]">
             {b.intro}
           </p>
         </div>
 
-        <div className="mx-auto mt-8 max-w-[1400px] px-4 sm:px-6 md:mt-12 md:px-10">
-          <BreedImage src={b.image} alt={`${b.name} — reference photograph`} name={b.name} />
-          <p className="mt-3 text-[10px] uppercase tracking-[0.22em] text-muted-foreground md:text-xs">
+        <div className="mx-auto mt-10 max-w-[1400px] px-4 sm:px-6 md:mt-14 md:px-10">
+          <div className="overflow-hidden rounded-[1.25rem] shadow-[var(--shadow-press)]">
+            <BreedImage src={b.image} alt={`${b.name} — reference photograph`} name={b.name} />
+          </div>
+          <p className="mt-4 text-[10px] uppercase tracking-[0.26em] text-muted-foreground md:text-xs">
             Plate № {b.issueNo} — {b.name}{b.image ? ", reference photograph" : ""}
           </p>
         </div>
       </section>
 
       {/* QUICK FACTS */}
-      <section className="border-b border-ink/15">
-        <div className="mx-auto grid max-w-[1400px] grid-cols-2 gap-x-6 gap-y-5 px-4 py-10 sm:px-6 md:grid-cols-4 md:gap-x-8 md:gap-y-6 md:px-10 md:py-12">
+      <section className="border-b border-ink/12">
+        <div className="mx-auto grid max-w-[1400px] grid-cols-2 gap-x-6 gap-y-6 px-4 py-12 sm:px-6 md:grid-cols-4 md:gap-x-10 md:gap-y-7 md:px-10 md:py-16">
           {facts.map(([k, v]) => (
             <div key={k}>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-rust">{k}</p>
-              <p className="mt-2 font-serif text-lg leading-tight md:text-xl">{v}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-brass">{k}</p>
+              <p className="mt-3 font-serif text-lg leading-tight md:text-xl">{v}</p>
             </div>
           ))}
         </div>
@@ -200,14 +204,14 @@ function BreedPage() {
             <p className="body-serif">{b.health}</p>
           </Section>
 
-          <div className="mt-16 border-y border-ink/30 py-8 md:mt-20 md:py-10">
-            <p className="eyebrow text-rust">Field Notes</p>
-            <h3 className="mt-3 font-serif text-2xl md:text-3xl">Three things you may not know.</h3>
-            <ol className="mt-6 space-y-5 md:mt-8 md:space-y-6">
+          <div className="mt-20 rounded-2xl border border-ink/10 bg-cream/50 p-8 backdrop-blur md:mt-24 md:p-10">
+            <p className="eyebrow">Field Notes</p>
+            <h3 className="mt-3 font-serif text-[1.65rem] tracking-tight md:text-3xl">Three things you may not know.</h3>
+            <ol className="mt-8 space-y-6 md:space-y-7">
               {b.funFacts.map((f, i) => (
-                <li key={i} className="flex gap-4 md:gap-6">
-                  <span className="font-serif text-4xl leading-none text-rust md:text-5xl">{(i + 1).toString().padStart(2, "0")}</span>
-                  <p className="text-pretty text-base leading-relaxed text-foreground/85 md:text-lg">{f}</p>
+                <li key={i} className="flex gap-5 md:gap-7">
+                  <span className="font-serif text-4xl leading-none text-brass md:text-5xl">{(i + 1).toString().padStart(2, "0")}</span>
+                  <p className="text-pretty text-base leading-relaxed text-foreground/80 md:text-[1.1rem]">{f}</p>
                 </li>
               ))}
             </ol>
@@ -227,17 +231,17 @@ function BreedPage() {
         <aside className="mt-16 md:col-span-4 md:mt-0">
           <div className="space-y-10 md:sticky md:top-24">
             <div>
-              <p className="eyebrow text-rust">Temperament</p>
-              <div className="mt-4 flex flex-wrap gap-2">
+              <p className="eyebrow">Temperament</p>
+              <div className="mt-5 flex flex-wrap gap-2">
                 {b.temperament.map((t) => (
-                  <span key={t} className="border border-ink px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] md:text-xs">{t}</span>
+                  <span key={t} className="rounded-full border border-ink/15 bg-cream/60 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] backdrop-blur md:text-[11px]">{t}</span>
                 ))}
               </div>
             </div>
 
             <div>
-              <p className="eyebrow text-rust">By the Numbers</p>
-              <div className="mt-4">
+              <p className="eyebrow">By the Numbers</p>
+              <div className="mt-5 rounded-2xl border border-ink/10 bg-cream/50 p-5 backdrop-blur">
                 <StatBar label="Energy" value={b.energy} />
                 <StatBar label="Affection" value={b.affection} />
                 <StatBar label="Trainability" value={b.trainability} />
@@ -247,9 +251,9 @@ function BreedPage() {
               </div>
             </div>
 
-            <div className="bg-ink p-6 text-cream">
-              <p className="eyebrow text-gold">Editor's Note</p>
-              <p className="mt-3 font-serif text-lg italic leading-snug md:text-xl">
+            <div className="surface-onyx rounded-2xl p-7 shadow-[var(--shadow-elevated)]">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-champagne">Editor's Note</p>
+              <p className="mt-4 font-serif text-[1.2rem] italic leading-snug md:text-[1.35rem]">
                 &ldquo;{b.tagline}&rdquo; — a {b.species} that rewards the prepared owner and humbles the sentimental one.
               </p>
             </div>
@@ -259,14 +263,14 @@ function BreedPage() {
 
       {/* RELATED */}
       {related.length > 0 && (
-        <section className="mx-auto max-w-[1400px] border-t border-ink/30 px-4 py-16 sm:px-6 md:px-10 md:py-20">
-          <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-ink/30 pb-4">
+        <section className="mx-auto max-w-[1400px] border-t border-ink/15 px-4 py-20 sm:px-6 md:px-10 md:py-24">
+          <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-ink/15 pb-5">
             <p className="eyebrow">Continue Reading</p>
-            <Link to={b.species === "dog" ? "/dogs" : "/cats"} className="text-xs font-semibold uppercase tracking-[0.22em] text-rust">
-              All {b.species === "dog" ? "dogs" : "cats"} →
+            <Link to={b.species === "dog" ? "/dogs" : "/cats"} className="text-[11px] font-semibold uppercase tracking-[0.24em] text-brass hover:text-ink">
+              All {b.species === "dog" ? "canines" : "felines"} →
             </Link>
           </div>
-          <div className="mt-8 grid gap-x-6 gap-y-12 sm:grid-cols-2 md:mt-10 md:grid-cols-3 md:gap-x-10">
+          <div className="mt-12 grid gap-x-6 gap-y-14 sm:grid-cols-2 md:mt-14 md:grid-cols-3 md:gap-x-10">
             {related.map(r => <BreedCard key={r.slug} breed={r} />)}
           </div>
         </section>
@@ -279,13 +283,13 @@ function BreedPage() {
 
 function Section({ eyebrow, title, children }: { eyebrow: string; title: string; children: React.ReactNode }) {
   return (
-    <div className="mt-12 first:mt-0 md:mt-16">
+    <div className="mt-14 first:mt-0 md:mt-20">
       <div className="flex items-baseline gap-4">
-        <p className="eyebrow text-rust">{eyebrow}</p>
-        <span className="h-px flex-1 bg-ink/30" />
+        <p className="eyebrow">{eyebrow}</p>
+        <span className="h-px flex-1 bg-ink/15" />
       </div>
-      <h2 className="display-md mt-4">{title}</h2>
-      <div className="mt-6">{children}</div>
+      <h2 className="display-md mt-5">{title}</h2>
+      <div className="mt-7">{children}</div>
     </div>
   );
 }
