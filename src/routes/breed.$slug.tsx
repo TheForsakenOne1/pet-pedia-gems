@@ -145,37 +145,41 @@ function BreedPage() {
       <SiteHeader />
 
       {/* MASTHEAD */}
-      <section className="border-b border-ink/20">
-        <div className="mx-auto max-w-[1400px] px-4 pt-8 sm:px-6 md:px-10 md:pt-12">
-          <div className="flex flex-wrap items-baseline justify-between gap-3 text-[10px] uppercase tracking-[0.25em] text-foreground/60 md:text-xs">
-            <span>Dossier № {b.issueNo}</span>
+      <section className="border-b border-ink/12">
+        <div className="mx-auto max-w-[1400px] px-4 pt-10 sm:px-6 md:px-10 md:pt-16">
+          <div className="flex flex-wrap items-center justify-between gap-3 text-[10px] uppercase tracking-[0.28em] text-foreground/55 md:text-xs">
+            <span className="inline-flex items-center gap-2 rounded-full border border-ink/12 bg-cream/60 px-3 py-1 backdrop-blur">
+              <span className="h-1.5 w-1.5 rounded-full bg-brass" /> Dossier № {b.issueNo}
+            </span>
             <span className="hidden md:inline">{b.species === "dog" ? "Section I — Canidae" : "Section II — Felidae"}</span>
-            <Link to={b.species === "dog" ? "/dogs" : "/cats"} className="text-rust">
-              ← All {b.species === "dog" ? "dogs" : "cats"}
+            <Link to={b.species === "dog" ? "/dogs" : "/cats"} className="text-brass hover:text-ink">
+              ← All {b.species === "dog" ? "canines" : "felines"}
             </Link>
           </div>
-          <p className="eyebrow mt-8 text-rust md:mt-10">{b.tagline}</p>
-          <h1 className="display-xl mt-3 text-balance md:mt-4">{b.name}.</h1>
-          <p className="mt-5 max-w-2xl font-serif text-xl italic leading-snug text-foreground/80 sm:text-2xl md:mt-6 md:text-3xl">
+          <p className="eyebrow mt-10 md:mt-12">{b.tagline}</p>
+          <h1 className="display-xl mt-4 text-balance md:mt-5">{b.name}.</h1>
+          <p className="mt-6 max-w-2xl font-serif text-[1.4rem] italic leading-snug text-foreground/72 sm:text-2xl md:mt-7 md:text-[1.85rem]">
             {b.intro}
           </p>
         </div>
 
-        <div className="mx-auto mt-8 max-w-[1400px] px-4 sm:px-6 md:mt-12 md:px-10">
-          <BreedImage src={b.image} alt={`${b.name} — reference photograph`} name={b.name} />
-          <p className="mt-3 text-[10px] uppercase tracking-[0.22em] text-muted-foreground md:text-xs">
+        <div className="mx-auto mt-10 max-w-[1400px] px-4 sm:px-6 md:mt-14 md:px-10">
+          <div className="overflow-hidden rounded-[1.25rem] shadow-[var(--shadow-press)]">
+            <BreedImage src={b.image} alt={`${b.name} — reference photograph`} name={b.name} />
+          </div>
+          <p className="mt-4 text-[10px] uppercase tracking-[0.26em] text-muted-foreground md:text-xs">
             Plate № {b.issueNo} — {b.name}{b.image ? ", reference photograph" : ""}
           </p>
         </div>
       </section>
 
       {/* QUICK FACTS */}
-      <section className="border-b border-ink/15">
-        <div className="mx-auto grid max-w-[1400px] grid-cols-2 gap-x-6 gap-y-5 px-4 py-10 sm:px-6 md:grid-cols-4 md:gap-x-8 md:gap-y-6 md:px-10 md:py-12">
+      <section className="border-b border-ink/12">
+        <div className="mx-auto grid max-w-[1400px] grid-cols-2 gap-x-6 gap-y-6 px-4 py-12 sm:px-6 md:grid-cols-4 md:gap-x-10 md:gap-y-7 md:px-10 md:py-16">
           {facts.map(([k, v]) => (
             <div key={k}>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-rust">{k}</p>
-              <p className="mt-2 font-serif text-lg leading-tight md:text-xl">{v}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-brass">{k}</p>
+              <p className="mt-3 font-serif text-lg leading-tight md:text-xl">{v}</p>
             </div>
           ))}
         </div>
