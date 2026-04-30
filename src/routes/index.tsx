@@ -80,23 +80,21 @@ function Index() {
 
         <div className="mx-auto grid max-w-[1400px] gap-12 px-4 pb-12 pt-12 sm:px-6 md:grid-cols-12 md:gap-14 md:px-10 md:pb-24 md:pt-20">
           <div className="md:col-span-7">
-            <div className="flex flex-wrap items-center gap-3 text-[10px] uppercase tracking-[0.3em] text-foreground/55 md:text-xs">
-              <span className="inline-flex items-center gap-2 rounded-full border border-ink/12 bg-cream/70 px-3 py-1 backdrop-blur">
-                <span className="h-1.5 w-1.5 rounded-full bg-brass" /> Issue № XXVI
-              </span>
-              <span className="text-brass">Living Edition · MMXXVI</span>
+            <div className="flex flex-wrap items-center gap-3">
+              <EyebrowPill>Issue № XXVI</EyebrowPill>
+              <Eyebrow as="span" className="tracking-[0.3em]">Living Edition · MMXXVI</Eyebrow>
             </div>
-            <h1 className="display-xl mt-7 text-balance fade-up md:mt-9">
+            <DisplayXL className="mt-7 fade-up md:mt-9">
               The animals
               <br />
               <span className="italic font-normal text-brass" style={{ fontVariationSettings: '"opsz" 144, "SOFT" 100' }}>
                 we live
               </span>{" "}
               with.
-            </h1>
-            <p className="mt-7 max-w-xl text-pretty text-base leading-relaxed text-foreground/70 sm:text-lg md:mt-9 md:text-[1.2rem]">
+            </DisplayXL>
+            <Body size="xl" className="mt-7 max-w-xl md:mt-9">
               A considered almanac documenting every recognized dog and cat breed — researched without sentiment, photographed from the field, and written for people who plan to keep an animal for fifteen years.
-            </p>
+            </Body>
             <div className="mt-9 flex flex-wrap items-center gap-3 md:mt-11 md:gap-4">
               <Link to="/dogs" className="btn-primary group inline-flex items-center gap-3">
                 Read the canines <span className="transition group-hover:translate-x-1">→</span>
@@ -115,7 +113,7 @@ function Index() {
               ].map(([big, small]) => (
                 <div key={small}>
                   <p className="font-serif text-3xl leading-none tracking-tight md:text-4xl">{big}</p>
-                  <p className="mt-2 text-[10px] uppercase tracking-[0.26em] text-muted-foreground">{small}</p>
+                  <MicroLabel className="mt-2 block">{small}</MicroLabel>
                 </div>
               ))}
             </div>
