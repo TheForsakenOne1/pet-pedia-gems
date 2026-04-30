@@ -19,7 +19,7 @@ function buildHead(q: string, filters: string[], count?: number) {
   if (q) titleBits.push(`“${q}”`);
   if (hasFilters) titleBits.push(filters.map((f) => f.replace(/-/g, " ")).join(" + "));
   const suffix = titleBits.length ? `${titleBits.join(" · ")} — ` : "";
-  const title = `${suffix}The Cat Index — Pelt & Paw`;
+  const title = `${suffix}The Felines — Pelt & Paw`;
 
   let desc = "Every documented cat breed: ancestry, temperament, husbandry, and health.";
   if (q || hasFilters) {
