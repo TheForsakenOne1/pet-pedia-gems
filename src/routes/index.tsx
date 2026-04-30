@@ -5,6 +5,16 @@ import { SiteFooter } from "@/components/site-footer";
 import { BreedGridSkeleton } from "@/components/breed-skeletons";
 import { listBreeds } from "@/server/breeds";
 import type { BreedSummary } from "@/types/breed";
+import {
+  Body,
+  DisplayLG,
+  DisplayXL,
+  Eyebrow,
+  EyebrowPill,
+  Lede,
+  MicroLabel,
+  PullQuote,
+} from "@/components/typography";
 
 export const Route = createFileRoute("/")({
   loader: () => listBreeds(),
@@ -24,10 +34,10 @@ export const Route = createFileRoute("/")({
     <div className="min-h-screen bg-background">
       <SiteHeader />
       <div className="mx-auto max-w-2xl px-6 py-24 text-center md:py-32">
-        <p className="eyebrow">Pressroom Error</p>
-        <h1 className="display-lg mt-3">The wire is down.</h1>
-        <p className="mt-4 text-muted-foreground">{error.message}</p>
-        <p className="mt-6 text-sm text-muted-foreground">Refresh to retry — the index lives on a 12-hour cache.</p>
+        <Eyebrow>Pressroom Error</Eyebrow>
+        <DisplayLG className="mt-3">The wire is down.</DisplayLG>
+        <Body size="base" className="mt-4" tone="muted">{error.message}</Body>
+        <Body size="sm" className="mt-6" tone="muted">Refresh to retry — the index lives on a 12-hour cache.</Body>
       </div>
       <SiteFooter />
     </div>
@@ -40,9 +50,9 @@ function PendingIndex() {
     <div className="min-h-screen bg-background">
       <SiteHeader />
       <section className="mx-auto max-w-[1400px] px-4 py-16 sm:px-6 md:px-10 md:py-24">
-        <p className="eyebrow">Living Edition</p>
-        <h1 className="display-xl mt-4">The animals we live with.</h1>
-        <p className="mt-6 text-sm text-muted-foreground">Loading the index…</p>
+        <Eyebrow>Living Edition</Eyebrow>
+        <DisplayXL className="mt-4">The animals we live with.</DisplayXL>
+        <Body size="sm" className="mt-6" tone="muted">Loading the index…</Body>
         <BreedGridSkeleton count={6} />
       </section>
       <SiteFooter />
