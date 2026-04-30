@@ -7,6 +7,7 @@ import { BreedDetailSkeleton } from "@/components/breed-skeletons";
 import { BreedImage } from "@/components/breed-image";
 import { getBreedDetail, listBreeds } from "@/server/breeds";
 import type { BreedDetail, BreedSummary } from "@/types/breed";
+import { Body, DisplayLG, DisplayMD, DisplayXL, Eyebrow, EyebrowPill, Lede, MicroLabel } from "@/components/typography";
 
 export const Route = createFileRoute("/breed/$slug")({
   loader: async ({ params }) => {
@@ -96,10 +97,10 @@ export const Route = createFileRoute("/breed/$slug")({
     <div className="min-h-screen bg-background">
       <SiteHeader />
       <div className="mx-auto max-w-2xl px-6 py-24 text-center md:py-32">
-        <p className="eyebrow text-rust">Error</p>
-        <h1 className="display-lg mt-3">Something went wrong.</h1>
-        <p className="mt-4 text-muted-foreground">{error.message}</p>
-        <Link to="/" className="mt-8 inline-block border-b-2 border-ink pb-1 text-xs font-semibold uppercase tracking-[0.22em]">Back to the index →</Link>
+        <Eyebrow>Error</Eyebrow>
+        <DisplayLG className="mt-3">Something went wrong.</DisplayLG>
+        <Body size="base" tone="muted" className="mt-4">{error.message}</Body>
+        <Link to="/" className="btn-ghost mt-8 inline-flex items-center gap-2">Back to the index →</Link>
       </div>
     </div>
   ),
@@ -107,9 +108,9 @@ export const Route = createFileRoute("/breed/$slug")({
     <div className="min-h-screen bg-background">
       <SiteHeader />
       <div className="mx-auto max-w-2xl px-6 py-24 text-center md:py-32">
-        <p className="eyebrow text-rust">Not Found</p>
-        <h1 className="display-lg mt-3">No such breed in the index.</h1>
-        <Link to="/" className="mt-8 inline-block border-b-2 border-ink pb-1 text-xs font-semibold uppercase tracking-[0.22em]">Back to the index →</Link>
+        <Eyebrow>Not Found</Eyebrow>
+        <DisplayLG className="mt-3">No such breed in the index.</DisplayLG>
+        <Link to="/" className="btn-ghost mt-8 inline-flex items-center gap-2">Back to the index →</Link>
       </div>
     </div>
   ),
