@@ -231,17 +231,17 @@ function BreedPage() {
         <aside className="mt-16 md:col-span-4 md:mt-0">
           <div className="space-y-10 md:sticky md:top-24">
             <div>
-              <p className="eyebrow text-rust">Temperament</p>
-              <div className="mt-4 flex flex-wrap gap-2">
+              <p className="eyebrow">Temperament</p>
+              <div className="mt-5 flex flex-wrap gap-2">
                 {b.temperament.map((t) => (
-                  <span key={t} className="border border-ink px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] md:text-xs">{t}</span>
+                  <span key={t} className="rounded-full border border-ink/15 bg-cream/60 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] backdrop-blur md:text-[11px]">{t}</span>
                 ))}
               </div>
             </div>
 
             <div>
-              <p className="eyebrow text-rust">By the Numbers</p>
-              <div className="mt-4">
+              <p className="eyebrow">By the Numbers</p>
+              <div className="mt-5 rounded-2xl border border-ink/10 bg-cream/50 p-5 backdrop-blur">
                 <StatBar label="Energy" value={b.energy} />
                 <StatBar label="Affection" value={b.affection} />
                 <StatBar label="Trainability" value={b.trainability} />
@@ -251,9 +251,9 @@ function BreedPage() {
               </div>
             </div>
 
-            <div className="bg-ink p-6 text-cream">
-              <p className="eyebrow text-gold">Editor's Note</p>
-              <p className="mt-3 font-serif text-lg italic leading-snug md:text-xl">
+            <div className="surface-onyx rounded-2xl p-7 shadow-[var(--shadow-elevated)]">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-champagne">Editor's Note</p>
+              <p className="mt-4 font-serif text-[1.2rem] italic leading-snug md:text-[1.35rem]">
                 &ldquo;{b.tagline}&rdquo; — a {b.species} that rewards the prepared owner and humbles the sentimental one.
               </p>
             </div>
