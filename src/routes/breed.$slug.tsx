@@ -263,14 +263,14 @@ function BreedPage() {
 
       {/* RELATED */}
       {related.length > 0 && (
-        <section className="mx-auto max-w-[1400px] border-t border-ink/30 px-4 py-16 sm:px-6 md:px-10 md:py-20">
-          <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-ink/30 pb-4">
+        <section className="mx-auto max-w-[1400px] border-t border-ink/15 px-4 py-20 sm:px-6 md:px-10 md:py-24">
+          <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-ink/15 pb-5">
             <p className="eyebrow">Continue Reading</p>
-            <Link to={b.species === "dog" ? "/dogs" : "/cats"} className="text-xs font-semibold uppercase tracking-[0.22em] text-rust">
-              All {b.species === "dog" ? "dogs" : "cats"} →
+            <Link to={b.species === "dog" ? "/dogs" : "/cats"} className="text-[11px] font-semibold uppercase tracking-[0.24em] text-brass hover:text-ink">
+              All {b.species === "dog" ? "canines" : "felines"} →
             </Link>
           </div>
-          <div className="mt-8 grid gap-x-6 gap-y-12 sm:grid-cols-2 md:mt-10 md:grid-cols-3 md:gap-x-10">
+          <div className="mt-12 grid gap-x-6 gap-y-14 sm:grid-cols-2 md:mt-14 md:grid-cols-3 md:gap-x-10">
             {related.map(r => <BreedCard key={r.slug} breed={r} />)}
           </div>
         </section>
