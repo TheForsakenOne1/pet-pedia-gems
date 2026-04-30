@@ -105,30 +105,30 @@ export function BreedExplorer({
 
   return (
     <div>
-      <div className="mt-8 flex flex-col gap-4 md:mt-10">
+      <div className="mt-10 flex flex-col gap-5">
         <div className="relative">
-          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+          <Search className="pointer-events-none absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
           <input
             type="search"
             value={state.q}
             onChange={(e) => onChange({ ...state, q: e.target.value })}
             placeholder="Search by name, temperament, origin, or trait…"
             aria-label="Search breeds"
-            className="w-full border border-ink/30 bg-background/60 py-3 pl-11 pr-12 text-sm leading-tight outline-none transition focus:border-ink focus:ring-1 focus:ring-ink md:text-base"
+            className="w-full rounded-full border border-ink/15 bg-cream/70 py-4 pl-12 pr-12 text-[14px] leading-tight outline-none backdrop-blur transition placeholder:text-muted-foreground/70 focus:border-ink focus:bg-cream focus:shadow-[0_0_0_4px_rgba(0,0,0,0.04)] md:text-[15px]"
           />
           {state.q && (
             <button
               type="button"
               onClick={() => onChange({ ...state, q: "" })}
               aria-label="Clear search"
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-rust"
+              className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-muted-foreground transition hover:bg-ink/5 hover:text-ink"
             >
               <X className="h-4 w-4" />
             </button>
           )}
         </div>
 
-        {/* Filter chips — derived from real API tags, with counts */}
+        {/* Filter chips */}
         {chips.length > 0 && (
           <div className="-mx-1 flex flex-wrap gap-2">
             {chips.map((f) => {
@@ -141,20 +141,10 @@ export function BreedExplorer({
                   onClick={() => toggle(f.id)}
                   aria-pressed={on}
                   disabled={disabled}
-                  className={`mx-1 inline-flex items-center gap-1.5 border px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] transition ${
-                    on
-                      ? "border-ink bg-ink text-cream"
-                      : disabled
-                      ? "cursor-not-allowed border-ink/15 text-foreground/30"
-                      : "border-ink/30 text-foreground/70 hover:border-ink hover:text-ink"
-                  }`}
+                  className="chip mx-1"
                 >
                   <span>{f.label}</span>
-                  <span
-                    className={`text-[10px] tabular-nums ${
-                      on ? "text-cream/70" : "text-foreground/40"
-                    }`}
-                  >
+                  <span className={`tabular-nums text-[9.5px] ${on ? "text-cream/70" : "text-foreground/40"}`}>
                     {f.count}
                   </span>
                 </button>
@@ -164,7 +154,7 @@ export function BreedExplorer({
               <button
                 type="button"
                 onClick={clearAll}
-                className="mx-1 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-rust underline-offset-4 hover:underline"
+                className="mx-1 px-3 py-1.5 text-[10.5px] font-semibold uppercase tracking-[0.2em] text-rust underline-offset-4 hover:underline"
               >
                 Clear all
               </button>
@@ -172,29 +162,29 @@ export function BreedExplorer({
           </div>
         )}
 
-        <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-          {filtered.length} of {breeds.length} {breeds[0]?.species === "dog" ? "dogs" : "cats"}
+        <p className="text-[10.5px] uppercase tracking-[0.24em] text-muted-foreground">
+          {filtered.length} of {breeds.length} {breeds[0]?.species === "dog" ? "canines" : "felines"}
           {state.filters.length > 0 && ` · ${state.filters.length} filter${state.filters.length > 1 ? "s" : ""}`}
         </p>
       </div>
 
       {filtered.length === 0 ? (
-        <div className="mt-16 border-y border-ink/20 py-16 text-center md:mt-20 md:py-20">
-          <p className="eyebrow text-rust">No matches</p>
+        <div className="mt-16 rounded-2xl border border-ink/10 bg-cream/60 py-20 text-center md:mt-20">
+          <p className="eyebrow">No matches</p>
           <h3 className="display-md mt-3">{emptyLabel}</h3>
           <p className="mt-3 text-sm text-muted-foreground">Try a broader search or remove a filter.</p>
           <button
             type="button"
             onClick={clearAll}
-            className="mt-6 inline-block border-b-2 border-ink pb-1 text-xs font-semibold uppercase tracking-[0.22em] hover:text-rust"
+            className="mt-7 btn-ghost"
           >
-            Clear all filters →
+            Clear all filters
           </button>
         </div>
       ) : (
-        <div className="mt-10 grid gap-x-6 gap-y-12 sm:grid-cols-2 md:mt-12 md:gap-x-10 md:gap-y-16 lg:grid-cols-3">
+        <div className="mt-12 grid gap-x-6 gap-y-14 sm:grid-cols-2 md:mt-14 md:gap-x-10 md:gap-y-20 lg:grid-cols-3">
           {filtered.map((b, i) => (
-            <div key={b.slug} className={i % 5 === 1 ? "md:translate-y-10" : ""}>
+            <div key={b.slug} className={i % 5 === 1 ? "md:translate-y-12" : ""}>
               <BreedCard breed={b} variant={i % 3 === 0 ? "tall" : "default"} tokens={tokens} />
             </div>
           ))}
