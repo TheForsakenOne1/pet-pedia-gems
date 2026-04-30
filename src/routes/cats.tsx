@@ -74,9 +74,9 @@ function PendingCats() {
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
-      <section className="mx-auto max-w-[1400px] px-4 py-12 sm:px-6 md:px-10 md:py-24">
-        <p className="eyebrow text-rust">Section II</p>
-        <h1 className="display-xl mt-4">The Cat Index.</h1>
+      <section className="mx-auto max-w-[1400px] px-4 py-16 sm:px-6 md:px-10 md:py-24">
+        <p className="eyebrow">Section II — Felidae</p>
+        <h1 className="display-xl mt-4">The Felines.</h1>
         <p className="mt-6 text-sm text-muted-foreground">Loading the index…</p>
         <BreedGridSkeleton count={9} />
       </section>
@@ -90,7 +90,7 @@ function ErrorCats({ error }: { error: Error }) {
     <div className="min-h-screen bg-background">
       <SiteHeader />
       <div className="mx-auto max-w-2xl px-6 py-24 text-center md:py-32">
-        <p className="eyebrow text-rust">Pressroom Error</p>
+        <p className="eyebrow">Pressroom Error</p>
         <h1 className="display-lg mt-3">The wire is down.</h1>
         <p className="mt-4 text-muted-foreground">{error.message}</p>
         <p className="mt-6 text-sm text-muted-foreground">Refresh the page to retry.</p>
@@ -108,22 +108,24 @@ function CatsPage() {
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
-      <section className="mx-auto max-w-[1400px] px-4 py-12 sm:px-6 md:px-10 md:py-24">
-        <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-ink/30 pb-4">
+      <section className="mx-auto max-w-[1400px] px-4 py-16 sm:px-6 md:px-10 md:py-24">
+        <div className="flex flex-wrap items-end justify-between gap-4 border-b border-ink/15 pb-6">
           <div>
-            <p className="eyebrow text-rust">Section II</p>
-            <h1 className="display-xl mt-4">The Cat Index.</h1>
+            <p className="eyebrow">Section II — Felidae</p>
+            <h1 className="display-xl mt-4">The Felines.</h1>
           </div>
-          <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">{cats.length} entries</p>
+          <p className="rounded-full border border-ink/15 bg-cream/60 px-4 py-1.5 text-[10.5px] uppercase tracking-[0.24em] text-muted-foreground backdrop-blur">
+            {cats.length} entries
+          </p>
         </div>
-        <p className="mt-6 max-w-2xl text-base leading-relaxed text-foreground/75 md:text-lg">
+        <p className="mt-7 max-w-2xl text-base leading-relaxed text-foreground/70 md:text-[1.15rem]">
           Every recognized feline lineage we have documented — from the lynx-eared frontier cats of Maine to a hairless mutation born in a 1966 Toronto living room.
         </p>
         <BreedExplorer
           breeds={cats}
           state={{ q, filters }}
           onChange={(next) => navigate({ search: () => ({ q: next.q, filters: next.filters }), replace: true })}
-          emptyLabel="No cats match those filters."
+          emptyLabel="No felines match those filters."
         />
       </section>
       <SiteFooter />
