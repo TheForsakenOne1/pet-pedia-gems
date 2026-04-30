@@ -1,8 +1,9 @@
 import { useMemo } from "react";
 import type { BreedSummary } from "@/types/breed";
 import { BreedCard } from "@/components/breed-card";
-import { Search, X } from "lucide-react";
+import { Search, X, SlidersHorizontal } from "lucide-react";
 import { tokenize, matchesAll } from "@/lib/search";
+import { Body, DisplayMD, Eyebrow, MicroLabel } from "@/components/typography";
 
 export interface ExplorerState {
   q: string;
@@ -103,25 +104,39 @@ export function BreedExplorer({
 
   const clearAll = () => onChange({ q: "", filters: [] });
 
+  const speciesLabel = breeds[0]?.species === "dog" ? "canines" : "felines";
+  const hasQuery = !!state.q;
+  const hasFilters = state.filters.length > 0;
+
   return (
     <div>
       <div className="mt-10 flex flex-col gap-5">
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+        {/* Search input — premium pill */}
+        <div
+          className={`group relative rounded-full border bg-cream/70 backdrop-blur transition-all duration-300 ${
+            hasQuery
+              ? "border-ink shadow-[0_0_0_4px_rgba(0,0,0,0.04)]"
+              : "border-ink/15 hover:border-ink/30"
+          } focus-within:border-ink focus-within:shadow-[0_0_0_4px_rgba(0,0,0,0.04)] focus-within:bg-cream`}
+        >
+          <Search
+            className="pointer-events-none absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition group-focus-within:text-ink"
+            aria-hidden
+          />
           <input
             type="search"
             value={state.q}
             onChange={(e) => onChange({ ...state, q: e.target.value })}
             placeholder="Search by name, temperament, origin, or trait…"
             aria-label="Search breeds"
-            className="w-full rounded-full border border-ink/15 bg-cream/70 py-4 pl-12 pr-12 text-[14px] leading-tight outline-none backdrop-blur transition placeholder:text-muted-foreground/70 focus:border-ink focus:bg-cream focus:shadow-[0_0_0_4px_rgba(0,0,0,0.04)] md:text-[15px]"
+            className="w-full bg-transparent py-4 pl-12 pr-12 text-[14px] leading-tight outline-none placeholder:text-muted-foreground/70 md:text-[15px]"
           />
           {state.q && (
             <button
               type="button"
               onClick={() => onChange({ ...state, q: "" })}
               aria-label="Clear search"
-              className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-muted-foreground transition hover:bg-ink/5 hover:text-ink"
+              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-muted-foreground transition hover:bg-ink/5 hover:text-ink"
             >
               <X className="h-4 w-4" />
             </button>
@@ -130,55 +145,66 @@ export function BreedExplorer({
 
         {/* Filter chips */}
         {chips.length > 0 && (
-          <div className="-mx-1 flex flex-wrap gap-2">
-            {chips.map((f) => {
-              const on = state.filters.includes(f.id);
-              const disabled = !on && f.count === 0;
-              return (
+          <div>
+            <div className="mb-3 flex items-center gap-2">
+              <SlidersHorizontal className="h-3 w-3 text-brass" aria-hidden />
+              <span className="font-sans text-[10px] font-medium uppercase tracking-[0.24em] text-brass">
+                Refine by trait
+              </span>
+            </div>
+            <div className="-mx-1 flex flex-wrap gap-2">
+              {chips.map((f) => {
+                const on = state.filters.includes(f.id);
+                const disabled = !on && f.count === 0;
+                return (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => toggle(f.id)}
+                    aria-pressed={on}
+                    disabled={disabled}
+                    className="chip mx-1"
+                  >
+                    <span>{f.label}</span>
+                    <span
+                      className={`tabular-nums text-[9.5px] ${
+                        on ? "text-cream/70" : "text-foreground/40"
+                      }`}
+                    >
+                      {f.count}
+                    </span>
+                  </button>
+                );
+              })}
+              {(hasFilters || hasQuery) && (
                 <button
-                  key={f.id}
                   type="button"
-                  onClick={() => toggle(f.id)}
-                  aria-pressed={on}
-                  disabled={disabled}
-                  className="chip mx-1"
+                  onClick={clearAll}
+                  className="mx-1 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10.5px] font-semibold uppercase tracking-[0.2em] text-rust transition hover:bg-rust/5"
                 >
-                  <span>{f.label}</span>
-                  <span className={`tabular-nums text-[9.5px] ${on ? "text-cream/70" : "text-foreground/40"}`}>
-                    {f.count}
-                  </span>
+                  <X className="h-3 w-3" /> Clear all
                 </button>
-              );
-            })}
-            {(state.filters.length > 0 || state.q) && (
-              <button
-                type="button"
-                onClick={clearAll}
-                className="mx-1 px-3 py-1.5 text-[10.5px] font-semibold uppercase tracking-[0.2em] text-rust underline-offset-4 hover:underline"
-              >
-                Clear all
-              </button>
-            )}
+              )}
+            </div>
           </div>
         )}
 
-        <p className="text-[10.5px] uppercase tracking-[0.24em] text-muted-foreground">
-          {filtered.length} of {breeds.length} {breeds[0]?.species === "dog" ? "canines" : "felines"}
-          {state.filters.length > 0 && ` · ${state.filters.length} filter${state.filters.length > 1 ? "s" : ""}`}
-        </p>
+        <MicroLabel>
+          {filtered.length} of {breeds.length} {speciesLabel}
+          {hasFilters && ` · ${state.filters.length} filter${state.filters.length > 1 ? "s" : ""}`}
+        </MicroLabel>
       </div>
 
+      {/* Empty state */}
       {filtered.length === 0 ? (
-        <div className="mt-16 rounded-2xl border border-ink/10 bg-cream/60 py-20 text-center md:mt-20">
-          <p className="eyebrow">No matches</p>
-          <h3 className="display-md mt-3">{emptyLabel}</h3>
-          <p className="mt-3 text-sm text-muted-foreground">Try a broader search or remove a filter.</p>
-          <button
-            type="button"
-            onClick={clearAll}
-            className="mt-7 btn-ghost"
-          >
-            Clear all filters
+        <div className="mt-16 rounded-2xl border border-ink/10 bg-cream/60 px-6 py-20 text-center backdrop-blur md:mt-20">
+          <Eyebrow>No matches</Eyebrow>
+          <DisplayMD className="mt-3">{emptyLabel}</DisplayMD>
+          <Body size="base" className="mx-auto mt-3 max-w-md">
+            Try a broader search, drop a filter, or clear everything to see the full almanac.
+          </Body>
+          <button type="button" onClick={clearAll} className="btn-ghost mt-7 inline-flex items-center gap-2">
+            <X className="h-3.5 w-3.5" /> Clear all filters
           </button>
         </div>
       ) : (

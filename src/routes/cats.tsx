@@ -7,6 +7,7 @@ import { BreedExplorer, filterBreeds } from "@/components/breed-explorer";
 import { BreedGridSkeleton } from "@/components/breed-skeletons";
 import { listBreeds } from "@/server/breeds";
 import type { BreedSummary } from "@/types/breed";
+import { Body, DisplayLG, DisplayXL, Eyebrow, MicroLabel } from "@/components/typography";
 
 const searchSchema = z.object({
   q: fallback(z.string(), "").default(""),
@@ -75,9 +76,9 @@ function PendingCats() {
     <div className="min-h-screen bg-background">
       <SiteHeader />
       <section className="mx-auto max-w-[1400px] px-4 py-16 sm:px-6 md:px-10 md:py-24">
-        <p className="eyebrow">Section II — Felidae</p>
-        <h1 className="display-xl mt-4">The Felines.</h1>
-        <p className="mt-6 text-sm text-muted-foreground">Loading the index…</p>
+        <Eyebrow>Section II — Felidae</Eyebrow>
+        <DisplayXL className="mt-4">The Felines.</DisplayXL>
+        <Body size="sm" tone="muted" className="mt-6">Loading the index…</Body>
         <BreedGridSkeleton count={9} />
       </section>
       <SiteFooter />
@@ -90,10 +91,10 @@ function ErrorCats({ error }: { error: Error }) {
     <div className="min-h-screen bg-background">
       <SiteHeader />
       <div className="mx-auto max-w-2xl px-6 py-24 text-center md:py-32">
-        <p className="eyebrow">Pressroom Error</p>
-        <h1 className="display-lg mt-3">The wire is down.</h1>
-        <p className="mt-4 text-muted-foreground">{error.message}</p>
-        <p className="mt-6 text-sm text-muted-foreground">Refresh the page to retry.</p>
+        <Eyebrow>Pressroom Error</Eyebrow>
+        <DisplayLG className="mt-3">The wire is down.</DisplayLG>
+        <Body size="base" tone="muted" className="mt-4">{error.message}</Body>
+        <Body size="sm" tone="muted" className="mt-6">Refresh the page to retry.</Body>
       </div>
       <SiteFooter />
     </div>
@@ -111,16 +112,16 @@ function CatsPage() {
       <section className="mx-auto max-w-[1400px] px-4 py-16 sm:px-6 md:px-10 md:py-24">
         <div className="flex flex-wrap items-end justify-between gap-4 border-b border-ink/15 pb-6">
           <div>
-            <p className="eyebrow">Section II — Felidae</p>
-            <h1 className="display-xl mt-4">The Felines.</h1>
+            <Eyebrow>Section II — Felidae</Eyebrow>
+            <DisplayXL className="mt-4">The Felines.</DisplayXL>
           </div>
-          <p className="rounded-full border border-ink/15 bg-cream/60 px-4 py-1.5 text-[10.5px] uppercase tracking-[0.24em] text-muted-foreground backdrop-blur">
-            {cats.length} entries
-          </p>
+          <span className="rounded-full border border-ink/15 bg-cream/60 px-4 py-1.5 backdrop-blur">
+            <MicroLabel>{cats.length} entries</MicroLabel>
+          </span>
         </div>
-        <p className="mt-7 max-w-2xl text-base leading-relaxed text-foreground/70 md:text-[1.15rem]">
+        <Body size="lg" className="mt-7 max-w-2xl">
           Every recognized feline lineage we have documented — from the lynx-eared frontier cats of Maine to a hairless mutation born in a 1966 Toronto living room.
-        </p>
+        </Body>
         <BreedExplorer
           breeds={cats}
           state={{ q, filters }}
