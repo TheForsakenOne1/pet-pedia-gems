@@ -1,8 +1,8 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 
-import "@fontsource-variable/fraunces";
+import "@fontsource-variable/fraunces/index.css";
 import "@fontsource-variable/fraunces/wght-italic.css";
-import "@fontsource-variable/inter-tight";
+import "@fontsource-variable/inter-tight/index.css";
 import "@fontsource-variable/inter-tight/wght-italic.css";
 
 import appCss from "../styles.css?url";
