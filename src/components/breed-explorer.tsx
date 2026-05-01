@@ -276,11 +276,35 @@ export function BreedExplorer({
 
         {chips.length > 0 && (
           <div>
-            <div className="mb-3 flex items-center gap-2">
-              <SlidersHorizontal className="h-3 w-3 text-brass" aria-hidden />
-              <span className="font-sans text-[10px] font-medium uppercase tracking-[0.24em] text-brass">
-                Refine by trait
-              </span>
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <SlidersHorizontal className="h-3 w-3 text-brass" aria-hidden />
+                <span className="font-sans text-[10px] font-medium uppercase tracking-[0.24em] text-brass">
+                  Refine by trait
+                </span>
+              </div>
+              <div className="inline-flex items-center gap-1 rounded-full border border-ink/12 bg-cream/60 p-1 backdrop-blur">
+                <ArrowDownNarrowWide className="ml-2 h-3 w-3 text-foreground/45" aria-hidden />
+                {(["relevance", "count", "alpha"] as const).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => {
+                      if (s === chipSort) return;
+                      setChipSort(s);
+                      track("chip_sort_change", { surface, sort: s, query: state.q });
+                    }}
+                    aria-pressed={chipSort === s}
+                    className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] transition ${
+                      chipSort === s
+                        ? "bg-ink text-cream"
+                        : "text-foreground/55 hover:text-ink"
+                    }`}
+                  >
+                    {s === "alpha" ? "A–Z" : s}
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="-mx-1 flex flex-wrap gap-2">
               {chips.map((f) => {
