@@ -133,6 +133,32 @@ export function BreedExplorer({
 
   const filtered = useMemo(() => filterBreeds(breeds, state), [breeds, state]);
 
+  // Pagination — "load more" with smooth, progressive disclosure
+  const [page, setPage] = useState(1);
+  // Reset to page 1 whenever the active query/filters change
+  useEffect(() => {
+    setPage(1);
+  }, [stateKey]);
+  const visible = useMemo(() => filtered.slice(0, page * PAGE_SIZE), [filtered, page]);
+  const hasMore = visible.length < filtered.length;
+
+  // results_page_view — fire once per (filter-state, page) combination
+  const lastPageView = useRef<string>("");
+  useEffect(() => {
+    if (isFiltering) return;
+    if (filtered.length === 0) return;
+    const key = `${stateKey}::p${page}`;
+    if (lastPageView.current === key) return;
+    lastPageView.current = key;
+    track("results_page_view", {
+      surface,
+      page,
+      page_size: PAGE_SIZE,
+      visible: visible.length,
+      total: filtered.length,
+    });
+  }, [stateKey, page, isFiltering, filtered.length, visible.length, surface]);
+
   // Suggestions for the empty state — the most populous tags in the FULL
   // dataset that the user has not already enabled.
   const suggestions = useMemo(() => {
