@@ -1,9 +1,11 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { BreedSummary } from "@/types/breed";
 import { BreedCard } from "@/components/breed-card";
-import { Search, X, SlidersHorizontal } from "lucide-react";
+import { BreedGridSkeleton } from "@/components/breed-skeletons";
+import { Search, X, SlidersHorizontal, Sparkles } from "lucide-react";
 import { tokenize, matchesAll } from "@/lib/search";
 import { Body, DisplayMD, Eyebrow, MicroLabel } from "@/components/typography";
+import { track } from "@/lib/analytics";
 
 export interface ExplorerState {
   q: string;
@@ -15,6 +17,8 @@ interface Props {
   state: ExplorerState;
   onChange: (next: ExplorerState) => void;
   emptyLabel?: string;
+  /** Used for analytics — which index page this explorer lives on */
+  surface: "dogs" | "cats";
   /** Human label for chip — if a tag isn't here it gets title-cased */
   labelOverrides?: Record<string, string>;
   /** Max chips to render before showing "show more" */
@@ -63,15 +67,29 @@ export function BreedExplorer({
   state,
   onChange,
   emptyLabel = "No breeds match.",
+  surface,
   labelOverrides,
   maxChips = 18,
 }: Props) {
   const overrides = { ...DEFAULT_OVERRIDES, ...(labelOverrides || {}) };
   const tokens = useMemo(() => tokenize(state.q), [state.q]);
 
-  // Counts come from breeds matching the current SEARCH only (so chip counts
-  // reflect "what would happen if I add this filter on top of the current text").
-  // Active filter set is applied for display sort but we still show all chips.
+  // Debounced "filtering" indicator — flips on when q/filters change and back
+  // off after a short delay so the grid shows skeletons during rapid typing.
+  const [isFiltering, setIsFiltering] = useState(false);
+  const stateKey = `${state.q}::${state.filters.join("|")}`;
+  const firstRender = useRef(true);
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    setIsFiltering(true);
+    const t = setTimeout(() => setIsFiltering(false), 220);
+    return () => clearTimeout(t);
+  }, [stateKey]);
+
+  // Counts come from breeds matching the current SEARCH only.
   const chipCounts = useMemo(() => {
     const searchOnly = filterBreeds(breeds, { q: state.q, filters: [] });
     const counts = new Map<string, number>();
@@ -85,7 +103,6 @@ export function BreedExplorer({
     const all = Array.from(chipCounts.entries())
       .map(([id, count]) => ({ id, count, label: prettify(id, overrides) }))
       .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
-    // Always include active filters even if their count became 0
     const present = new Set(all.map((c) => c.id));
     for (const f of state.filters) {
       if (!present.has(f)) all.unshift({ id: f, count: 0, label: prettify(f, overrides) });
@@ -95,14 +112,71 @@ export function BreedExplorer({
 
   const filtered = useMemo(() => filterBreeds(breeds, state), [breeds, state]);
 
+  // Suggestions for the empty state — the most populous tags in the FULL
+  // dataset that the user has not already enabled.
+  const suggestions = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const b of breeds) for (const t of b.tags) counts.set(t, (counts.get(t) || 0) + 1);
+    const active = new Set(state.filters);
+    return Array.from(counts.entries())
+      .filter(([id]) => !active.has(id))
+      .map(([id, count]) => ({ id, count, label: prettify(id, overrides) }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+  }, [breeds, state.filters, overrides]);
+
   const toggle = (id: string) => {
-    const next = state.filters.includes(id)
-      ? state.filters.filter((f) => f !== id)
-      : [...state.filters, id];
+    const action = state.filters.includes(id) ? "remove" : "add";
+    const next = action === "remove" ? state.filters.filter((f) => f !== id) : [...state.filters, id];
+    const nextResults = filterBreeds(breeds, { q: state.q, filters: next }).length;
+    track("filter_toggle", {
+      surface,
+      tag: id,
+      action,
+      active_filters: next,
+      results: nextResults,
+    });
     onChange({ ...state, filters: next });
   };
 
-  const clearAll = () => onChange({ q: "", filters: [] });
+  const clearAll = () => {
+    track("filters_clear_all", {
+      surface,
+      cleared_query: state.q,
+      cleared_filters: state.filters,
+    });
+    onChange({ q: "", filters: [] });
+  };
+
+  // search_submit — fire when query is committed (debounced) OR on Enter.
+  const lastTracked = useRef<string>("");
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (state.q.trim().length < 2) return;
+      const key = `${state.q}::${state.filters.join("|")}`;
+      if (lastTracked.current === key) return;
+      lastTracked.current = key;
+      track("search_submit", {
+        surface,
+        query: state.q,
+        filters: state.filters,
+        results: filtered.length,
+      });
+    }, 600);
+    return () => clearTimeout(t);
+  }, [state.q, state.filters, filtered.length, surface]);
+
+  // empty_results — fire once per unique empty (q, filters) state.
+  const lastEmpty = useRef<string>("");
+  useEffect(() => {
+    if (isFiltering) return;
+    if (filtered.length !== 0) return;
+    if (state.q === "" && state.filters.length === 0) return;
+    const key = `${state.q}::${state.filters.join("|")}`;
+    if (lastEmpty.current === key) return;
+    lastEmpty.current = key;
+    track("empty_results", { surface, query: state.q, filters: state.filters });
+  }, [filtered.length, isFiltering, state.q, state.filters, surface]);
 
   const speciesLabel = breeds[0]?.species === "dog" ? "canines" : "felines";
   const hasQuery = !!state.q;
@@ -111,8 +185,18 @@ export function BreedExplorer({
   return (
     <div>
       <div className="mt-10 flex flex-col gap-5">
-        {/* Search input — premium pill */}
-        <div
+        {/* Search input */}
+        <form
+          role="search"
+          onSubmit={(e) => {
+            e.preventDefault();
+            track("search_submit", {
+              surface,
+              query: state.q,
+              filters: state.filters,
+              results: filtered.length,
+            });
+          }}
           className={`group relative rounded-full border bg-cream/70 backdrop-blur transition-all duration-300 ${
             hasQuery
               ? "border-ink shadow-[0_0_0_4px_rgba(0,0,0,0.04)]"
@@ -141,9 +225,8 @@ export function BreedExplorer({
               <X className="h-4 w-4" />
             </button>
           )}
-        </div>
+        </form>
 
-        {/* Filter chips */}
         {chips.length > 0 && (
           <div>
             <div className="mb-3 flex items-center gap-2">
@@ -190,27 +273,82 @@ export function BreedExplorer({
         )}
 
         <MicroLabel>
-          {filtered.length} of {breeds.length} {speciesLabel}
+          {isFiltering ? "Filtering…" : `${filtered.length} of ${breeds.length} ${speciesLabel}`}
           {hasFilters && ` · ${state.filters.length} filter${state.filters.length > 1 ? "s" : ""}`}
         </MicroLabel>
       </div>
 
-      {/* Empty state */}
-      {filtered.length === 0 ? (
-        <div className="mt-16 rounded-2xl border border-ink/10 bg-cream/60 px-6 py-20 text-center backdrop-blur md:mt-20">
+      {/* Results: skeleton while filtering, empty state, or grid */}
+      {isFiltering ? (
+        <BreedGridSkeleton count={6} />
+      ) : filtered.length === 0 ? (
+        <div className="mt-16 rounded-2xl border border-ink/10 bg-cream/60 px-6 py-16 text-center backdrop-blur md:mt-20 md:py-20">
           <Eyebrow>No matches</Eyebrow>
           <DisplayMD className="mt-3">{emptyLabel}</DisplayMD>
           <Body size="base" className="mx-auto mt-3 max-w-md">
-            Try a broader search, drop a filter, or clear everything to see the full almanac.
+            {hasQuery
+              ? `Nothing in the index matches “${state.q}”${
+                  hasFilters ? " with the current filters" : ""
+                }.`
+              : "No entries match the current filter combination."}{" "}
+            Try a popular trait below or clear everything to see the full almanac.
           </Body>
-          <button type="button" onClick={clearAll} className="btn-ghost mt-7 inline-flex items-center gap-2">
+
+          {suggestions.length > 0 && (
+            <div className="mx-auto mt-7 max-w-xl">
+              <div className="mb-3 flex items-center justify-center gap-2">
+                <Sparkles className="h-3 w-3 text-brass" aria-hidden />
+                <Eyebrow as="span">Try a popular trait</Eyebrow>
+              </div>
+              <div className="flex flex-wrap justify-center gap-2">
+                {suggestions.map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => {
+                      // Replace filters with just the suggestion + clear query for a clean reset
+                      track("filter_toggle", {
+                        surface,
+                        tag: s.id,
+                        action: "add",
+                        active_filters: [s.id],
+                        results: filterBreeds(breeds, { q: "", filters: [s.id] }).length,
+                      });
+                      onChange({ q: "", filters: [s.id] });
+                    }}
+                    className="chip"
+                  >
+                    <span>{s.label}</span>
+                    <span className="tabular-nums text-[9.5px] text-foreground/40">{s.count}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={clearAll}
+            className="btn-ghost mt-7 inline-flex items-center gap-2"
+          >
             <X className="h-3.5 w-3.5" /> Clear all filters
           </button>
         </div>
       ) : (
         <div className="mt-12 grid gap-x-6 gap-y-14 sm:grid-cols-2 md:mt-14 md:gap-x-10 md:gap-y-20 lg:grid-cols-3">
           {filtered.map((b, i) => (
-            <div key={b.slug} className={i % 5 === 1 ? "md:translate-y-12" : ""}>
+            <div
+              key={b.slug}
+              className={i % 5 === 1 ? "md:translate-y-12" : ""}
+              onClick={() =>
+                track("breed_card_click", {
+                  surface,
+                  slug: b.slug,
+                  query: state.q,
+                  filters: state.filters,
+                })
+              }
+            >
               <BreedCard breed={b} variant={i % 3 === 0 ? "tall" : "default"} tokens={tokens} />
             </div>
           ))}
