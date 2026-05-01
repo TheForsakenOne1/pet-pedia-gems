@@ -52,7 +52,7 @@ export type AnalyticsEvent =
     }
   | {
       name: "breed_page_view";
-      props: { surface: "dogs" | "cats" | "direct"; slug: string; species: "dog" | "cat"; query: string; filters: string[] };
+      props: { surface: "dogs" | "cats" | "home" | "direct"; slug: string; species: "dog" | "cat"; query: string; filters: string[] };
     };
 
 type WindowWithAnalytics = Window & {
