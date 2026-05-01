@@ -349,82 +349,119 @@ export function BreedExplorer({
         </MicroLabel>
       </div>
 
-      {/* Results: skeleton while filtering, empty state, or grid */}
-      {isFiltering ? (
-        <BreedGridSkeleton count={6} />
-      ) : filtered.length === 0 ? (
-        <div className="mt-16 rounded-2xl border border-ink/10 bg-cream/60 px-6 py-16 text-center backdrop-blur md:mt-20 md:py-20">
-          <Eyebrow>No matches</Eyebrow>
-          <DisplayMD className="mt-3">{emptyLabel}</DisplayMD>
-          <Body size="base" className="mx-auto mt-3 max-w-md">
-            {hasQuery
-              ? `Nothing in the index matches “${state.q}”${
-                  hasFilters ? " with the current filters" : ""
-                }.`
-              : "No entries match the current filter combination."}{" "}
-            Try a popular trait below or clear everything to see the full almanac.
-          </Body>
+      {/* Results: smooth crossfade between skeleton, empty, and grid states */}
+      <div className="relative mt-12 md:mt-14">
+        <div
+          key={isFiltering ? "loading" : filtered.length === 0 ? "empty" : "grid"}
+          className="animate-fade-in"
+        >
+          {isFiltering ? (
+            <BreedGridSkeleton count={6} />
+          ) : filtered.length === 0 ? (
+            <div className="rounded-2xl border border-ink/10 bg-cream/60 px-6 py-16 text-center backdrop-blur md:py-20">
+              <Eyebrow>No matches</Eyebrow>
+              <DisplayMD className="mt-3">{emptyLabel}</DisplayMD>
+              <Body size="base" className="mx-auto mt-3 max-w-md">
+                {hasQuery
+                  ? `Nothing in the index matches “${state.q}”${
+                      hasFilters ? " with the current filters" : ""
+                    }.`
+                  : "No entries match the current filter combination."}{" "}
+                Try a popular trait below or clear everything to see the full almanac.
+              </Body>
 
-          {suggestions.length > 0 && (
-            <div className="mx-auto mt-7 max-w-xl">
-              <div className="mb-3 flex items-center justify-center gap-2">
-                <Sparkles className="h-3 w-3 text-brass" aria-hidden />
-                <Eyebrow as="span">Try a popular trait</Eyebrow>
-              </div>
-              <div className="flex flex-wrap justify-center gap-2">
-                {suggestions.map((s) => (
-                  <button
-                    key={s.id}
-                    type="button"
+              {suggestions.length > 0 && (
+                <div className="mx-auto mt-7 max-w-xl">
+                  <div className="mb-3 flex items-center justify-center gap-2">
+                    <Sparkles className="h-3 w-3 text-brass" aria-hidden />
+                    <Eyebrow as="span">Try a popular trait</Eyebrow>
+                  </div>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {suggestions.map((s) => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => {
+                          track("filter_toggle", {
+                            surface,
+                            tag: s.id,
+                            action: "add",
+                            active_filters: [s.id],
+                            results: filterBreeds(breeds, { q: "", filters: [s.id] }).length,
+                          });
+                          onChange({ q: "", filters: [s.id] });
+                        }}
+                        className="chip"
+                      >
+                        <span>{s.label}</span>
+                        <span className="tabular-nums text-[9.5px] text-foreground/40">{s.count}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={clearAll}
+                className="btn-ghost mt-7 inline-flex items-center gap-2"
+              >
+                <X className="h-3.5 w-3.5" /> Clear all filters
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="grid gap-x-6 gap-y-14 sm:grid-cols-2 md:gap-x-10 md:gap-y-20 lg:grid-cols-3">
+                {visible.map((b, i) => (
+                  <div
+                    key={b.slug}
+                    className={`animate-fade-in ${i % 5 === 1 ? "md:translate-y-12" : ""}`}
+                    style={{ animationDelay: `${Math.min(i % PAGE_SIZE, 8) * 30}ms` }}
                     onClick={() => {
-                      // Replace filters with just the suggestion + clear query for a clean reset
-                      track("filter_toggle", {
+                      const ref = {
                         surface,
-                        tag: s.id,
-                        action: "add",
-                        active_filters: [s.id],
-                        results: filterBreeds(breeds, { q: "", filters: [s.id] }).length,
-                      });
-                      onChange({ q: "", filters: [s.id] });
+                        slug: b.slug,
+                        query: state.q,
+                        filters: state.filters,
+                      };
+                      track("breed_card_click", ref);
+                      setBreedReferrer(ref);
                     }}
-                    className="chip"
                   >
-                    <span>{s.label}</span>
-                    <span className="tabular-nums text-[9.5px] text-foreground/40">{s.count}</span>
-                  </button>
+                    <BreedCard breed={b} variant={i % 3 === 0 ? "tall" : "default"} tokens={tokens} />
+                  </div>
                 ))}
               </div>
-            </div>
-          )}
 
-          <button
-            type="button"
-            onClick={clearAll}
-            className="btn-ghost mt-7 inline-flex items-center gap-2"
-          >
-            <X className="h-3.5 w-3.5" /> Clear all filters
-          </button>
+              {hasMore && (
+                <div className="mt-16 flex flex-col items-center gap-3 md:mt-20">
+                  <MicroLabel>
+                    Showing {visible.length} of {filtered.length}
+                  </MicroLabel>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nextPage = page + 1;
+                      const nextLoaded = Math.min(nextPage * PAGE_SIZE, filtered.length);
+                      track("results_load_more", {
+                        surface,
+                        page: nextPage,
+                        page_size: PAGE_SIZE,
+                        loaded: nextLoaded,
+                        total: filtered.length,
+                      });
+                      setPage(nextPage);
+                    }}
+                    className="btn-ghost inline-flex items-center gap-2"
+                  >
+                    Load {Math.min(PAGE_SIZE, filtered.length - visible.length)} more →
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </div>
-      ) : (
-        <div className="mt-12 grid gap-x-6 gap-y-14 sm:grid-cols-2 md:mt-14 md:gap-x-10 md:gap-y-20 lg:grid-cols-3">
-          {filtered.map((b, i) => (
-            <div
-              key={b.slug}
-              className={i % 5 === 1 ? "md:translate-y-12" : ""}
-              onClick={() =>
-                track("breed_card_click", {
-                  surface,
-                  slug: b.slug,
-                  query: state.q,
-                  filters: state.filters,
-                })
-              }
-            >
-              <BreedCard breed={b} variant={i % 3 === 0 ? "tall" : "default"} tokens={tokens} />
-            </div>
-          ))}
-        </div>
-      )}
+      </div>
     </div>
   );
 }
