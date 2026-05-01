@@ -84,3 +84,43 @@ export function track<E extends AnalyticsEvent>(event: E["name"], props: Extract
     console.debug(`[analytics] ${event}`, props);
   }
 }
+
+/**
+ * Lightweight referrer context for cross-page analytics. The explorer stores
+ * the surface + query + filters when a card is clicked; the breed page reads
+ * it on mount so `breed_page_view` can be attributed.
+ */
+const REFERRER_KEY = "pp:breed_referrer";
+
+export interface BreedReferrer {
+  surface: "dogs" | "cats" | "home";
+  query: string;
+  filters: string[];
+  slug: string;
+  ts: number;
+}
+
+export function setBreedReferrer(r: Omit<BreedReferrer, "ts">): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(REFERRER_KEY, JSON.stringify({ ...r, ts: Date.now() }));
+  } catch {
+    // ignore
+  }
+}
+
+export function consumeBreedReferrer(slug: string): BreedReferrer | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(REFERRER_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as BreedReferrer;
+    sessionStorage.removeItem(REFERRER_KEY);
+    // Only honor the referrer if it matches the destination and is fresh (<10s)
+    if (parsed.slug !== slug) return null;
+    if (Date.now() - parsed.ts > 10_000) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
