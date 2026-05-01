@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { createFileRoute, notFound, Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
@@ -8,6 +9,7 @@ import { BreedImage } from "@/components/breed-image";
 import { getBreedDetail, listBreeds } from "@/server/breeds";
 import type { BreedDetail, BreedSummary } from "@/types/breed";
 import { Body, DisplayLG, DisplayMD, DisplayXL, Eyebrow, EyebrowPill, Lede, MicroLabel, Prose } from "@/components/typography";
+import { track, consumeBreedReferrer } from "@/lib/analytics";
 
 export const Route = createFileRoute("/breed/$slug")({
   loader: async ({ params }) => {
