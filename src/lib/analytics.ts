@@ -37,6 +37,22 @@ export type AnalyticsEvent =
   | {
       name: "breed_card_click";
       props: { surface: "dogs" | "cats" | "home"; slug: string; query: string; filters: string[] };
+    }
+  | {
+      name: "chip_sort_change";
+      props: { surface: "dogs" | "cats"; sort: "relevance" | "count" | "alpha"; query: string };
+    }
+  | {
+      name: "results_load_more";
+      props: { surface: "dogs" | "cats"; page: number; page_size: number; loaded: number; total: number };
+    }
+  | {
+      name: "results_page_view";
+      props: { surface: "dogs" | "cats"; page: number; page_size: number; visible: number; total: number };
+    }
+  | {
+      name: "breed_page_view";
+      props: { surface: "dogs" | "cats" | "home" | "direct"; slug: string; species: "dog" | "cat"; query: string; filters: string[] };
     };
 
 type WindowWithAnalytics = Window & {
@@ -66,5 +82,45 @@ export function track<E extends AnalyticsEvent>(event: E["name"], props: Extract
   if (typeof console !== "undefined") {
     // eslint-disable-next-line no-console
     console.debug(`[analytics] ${event}`, props);
+  }
+}
+
+/**
+ * Lightweight referrer context for cross-page analytics. The explorer stores
+ * the surface + query + filters when a card is clicked; the breed page reads
+ * it on mount so `breed_page_view` can be attributed.
+ */
+const REFERRER_KEY = "pp:breed_referrer";
+
+export interface BreedReferrer {
+  surface: "dogs" | "cats" | "home";
+  query: string;
+  filters: string[];
+  slug: string;
+  ts: number;
+}
+
+export function setBreedReferrer(r: Omit<BreedReferrer, "ts">): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(REFERRER_KEY, JSON.stringify({ ...r, ts: Date.now() }));
+  } catch {
+    // ignore
+  }
+}
+
+export function consumeBreedReferrer(slug: string): BreedReferrer | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(REFERRER_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as BreedReferrer;
+    sessionStorage.removeItem(REFERRER_KEY);
+    // Only honor the referrer if it matches the destination and is fresh (<10s)
+    if (parsed.slug !== slug) return null;
+    if (Date.now() - parsed.ts > 10_000) return null;
+    return parsed;
+  } catch {
+    return null;
   }
 }

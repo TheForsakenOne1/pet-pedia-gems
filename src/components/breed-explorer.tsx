@@ -2,10 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { BreedSummary } from "@/types/breed";
 import { BreedCard } from "@/components/breed-card";
 import { BreedGridSkeleton } from "@/components/breed-skeletons";
-import { Search, X, SlidersHorizontal, Sparkles } from "lucide-react";
+import { Search, X, SlidersHorizontal, Sparkles, ArrowDownNarrowWide } from "lucide-react";
 import { tokenize, matchesAll } from "@/lib/search";
 import { Body, DisplayMD, Eyebrow, MicroLabel } from "@/components/typography";
-import { track } from "@/lib/analytics";
+import { track, setBreedReferrer } from "@/lib/analytics";
+
+type ChipSort = "relevance" | "count" | "alpha";
+const PAGE_SIZE = 12;
 
 export interface ExplorerState {
   q: string;
@@ -99,18 +102,62 @@ export function BreedExplorer({
     return counts;
   }, [breeds, state.q]);
 
+  // Chip ordering — relevance (matches in current query first, then count),
+  // count (most-used), or alpha. Defaults to "relevance" so query-matching
+  // chips bubble up while typing.
+  const [chipSort, setChipSort] = useState<ChipSort>("relevance");
+
   const chips = useMemo(() => {
+    const queryTokens = tokens;
     const all = Array.from(chipCounts.entries())
-      .map(([id, count]) => ({ id, count, label: prettify(id, overrides) }))
-      .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+      .map(([id, count]) => {
+        const label = prettify(id, overrides);
+        const hay = `${id} ${label}`.toLowerCase();
+        const queryHits = queryTokens.reduce((n, t) => (hay.includes(t) ? n + 1 : n), 0);
+        return { id, count, label, queryHits };
+      })
+      .sort((a, b) => {
+        if (chipSort === "alpha") return a.label.localeCompare(b.label);
+        if (chipSort === "count") return b.count - a.count || a.label.localeCompare(b.label);
+        // relevance: query-matching chips first, then by count, then alpha
+        if (b.queryHits !== a.queryHits) return b.queryHits - a.queryHits;
+        return b.count - a.count || a.label.localeCompare(b.label);
+      });
     const present = new Set(all.map((c) => c.id));
     for (const f of state.filters) {
-      if (!present.has(f)) all.unshift({ id: f, count: 0, label: prettify(f, overrides) });
+      if (!present.has(f))
+        all.unshift({ id: f, count: 0, label: prettify(f, overrides), queryHits: 0 });
     }
     return all.slice(0, maxChips);
-  }, [chipCounts, state.filters, maxChips, overrides]);
+  }, [chipCounts, state.filters, maxChips, overrides, chipSort, tokens]);
 
   const filtered = useMemo(() => filterBreeds(breeds, state), [breeds, state]);
+
+  // Pagination — "load more" with smooth, progressive disclosure
+  const [page, setPage] = useState(1);
+  // Reset to page 1 whenever the active query/filters change
+  useEffect(() => {
+    setPage(1);
+  }, [stateKey]);
+  const visible = useMemo(() => filtered.slice(0, page * PAGE_SIZE), [filtered, page]);
+  const hasMore = visible.length < filtered.length;
+
+  // results_page_view — fire once per (filter-state, page) combination
+  const lastPageView = useRef<string>("");
+  useEffect(() => {
+    if (isFiltering) return;
+    if (filtered.length === 0) return;
+    const key = `${stateKey}::p${page}`;
+    if (lastPageView.current === key) return;
+    lastPageView.current = key;
+    track("results_page_view", {
+      surface,
+      page,
+      page_size: PAGE_SIZE,
+      visible: visible.length,
+      total: filtered.length,
+    });
+  }, [stateKey, page, isFiltering, filtered.length, visible.length, surface]);
 
   // Suggestions for the empty state — the most populous tags in the FULL
   // dataset that the user has not already enabled.
@@ -229,11 +276,35 @@ export function BreedExplorer({
 
         {chips.length > 0 && (
           <div>
-            <div className="mb-3 flex items-center gap-2">
-              <SlidersHorizontal className="h-3 w-3 text-brass" aria-hidden />
-              <span className="font-sans text-[10px] font-medium uppercase tracking-[0.24em] text-brass">
-                Refine by trait
-              </span>
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <SlidersHorizontal className="h-3 w-3 text-brass" aria-hidden />
+                <span className="font-sans text-[10px] font-medium uppercase tracking-[0.24em] text-brass">
+                  Refine by trait
+                </span>
+              </div>
+              <div className="inline-flex items-center gap-1 rounded-full border border-ink/12 bg-cream/60 p-1 backdrop-blur">
+                <ArrowDownNarrowWide className="ml-2 h-3 w-3 text-foreground/45" aria-hidden />
+                {(["relevance", "count", "alpha"] as const).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => {
+                      if (s === chipSort) return;
+                      setChipSort(s);
+                      track("chip_sort_change", { surface, sort: s, query: state.q });
+                    }}
+                    aria-pressed={chipSort === s}
+                    className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] transition ${
+                      chipSort === s
+                        ? "bg-ink text-cream"
+                        : "text-foreground/55 hover:text-ink"
+                    }`}
+                  >
+                    {s === "alpha" ? "A–Z" : s}
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="-mx-1 flex flex-wrap gap-2">
               {chips.map((f) => {
@@ -278,82 +349,119 @@ export function BreedExplorer({
         </MicroLabel>
       </div>
 
-      {/* Results: skeleton while filtering, empty state, or grid */}
-      {isFiltering ? (
-        <BreedGridSkeleton count={6} />
-      ) : filtered.length === 0 ? (
-        <div className="mt-16 rounded-2xl border border-ink/10 bg-cream/60 px-6 py-16 text-center backdrop-blur md:mt-20 md:py-20">
-          <Eyebrow>No matches</Eyebrow>
-          <DisplayMD className="mt-3">{emptyLabel}</DisplayMD>
-          <Body size="base" className="mx-auto mt-3 max-w-md">
-            {hasQuery
-              ? `Nothing in the index matches “${state.q}”${
-                  hasFilters ? " with the current filters" : ""
-                }.`
-              : "No entries match the current filter combination."}{" "}
-            Try a popular trait below or clear everything to see the full almanac.
-          </Body>
+      {/* Results: smooth crossfade between skeleton, empty, and grid states */}
+      <div className="relative mt-12 md:mt-14">
+        <div
+          key={isFiltering ? "loading" : filtered.length === 0 ? "empty" : "grid"}
+          className="animate-fade-in"
+        >
+          {isFiltering ? (
+            <BreedGridSkeleton count={6} />
+          ) : filtered.length === 0 ? (
+            <div className="rounded-2xl border border-ink/10 bg-cream/60 px-6 py-16 text-center backdrop-blur md:py-20">
+              <Eyebrow>No matches</Eyebrow>
+              <DisplayMD className="mt-3">{emptyLabel}</DisplayMD>
+              <Body size="base" className="mx-auto mt-3 max-w-md">
+                {hasQuery
+                  ? `Nothing in the index matches “${state.q}”${
+                      hasFilters ? " with the current filters" : ""
+                    }.`
+                  : "No entries match the current filter combination."}{" "}
+                Try a popular trait below or clear everything to see the full almanac.
+              </Body>
 
-          {suggestions.length > 0 && (
-            <div className="mx-auto mt-7 max-w-xl">
-              <div className="mb-3 flex items-center justify-center gap-2">
-                <Sparkles className="h-3 w-3 text-brass" aria-hidden />
-                <Eyebrow as="span">Try a popular trait</Eyebrow>
-              </div>
-              <div className="flex flex-wrap justify-center gap-2">
-                {suggestions.map((s) => (
-                  <button
-                    key={s.id}
-                    type="button"
+              {suggestions.length > 0 && (
+                <div className="mx-auto mt-7 max-w-xl">
+                  <div className="mb-3 flex items-center justify-center gap-2">
+                    <Sparkles className="h-3 w-3 text-brass" aria-hidden />
+                    <Eyebrow as="span">Try a popular trait</Eyebrow>
+                  </div>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {suggestions.map((s) => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => {
+                          track("filter_toggle", {
+                            surface,
+                            tag: s.id,
+                            action: "add",
+                            active_filters: [s.id],
+                            results: filterBreeds(breeds, { q: "", filters: [s.id] }).length,
+                          });
+                          onChange({ q: "", filters: [s.id] });
+                        }}
+                        className="chip"
+                      >
+                        <span>{s.label}</span>
+                        <span className="tabular-nums text-[9.5px] text-foreground/40">{s.count}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={clearAll}
+                className="btn-ghost mt-7 inline-flex items-center gap-2"
+              >
+                <X className="h-3.5 w-3.5" /> Clear all filters
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="grid gap-x-6 gap-y-14 sm:grid-cols-2 md:gap-x-10 md:gap-y-20 lg:grid-cols-3">
+                {visible.map((b, i) => (
+                  <div
+                    key={b.slug}
+                    className={`animate-fade-in ${i % 5 === 1 ? "md:translate-y-12" : ""}`}
+                    style={{ animationDelay: `${Math.min(i % PAGE_SIZE, 8) * 30}ms` }}
                     onClick={() => {
-                      // Replace filters with just the suggestion + clear query for a clean reset
-                      track("filter_toggle", {
+                      const ref = {
                         surface,
-                        tag: s.id,
-                        action: "add",
-                        active_filters: [s.id],
-                        results: filterBreeds(breeds, { q: "", filters: [s.id] }).length,
-                      });
-                      onChange({ q: "", filters: [s.id] });
+                        slug: b.slug,
+                        query: state.q,
+                        filters: state.filters,
+                      };
+                      track("breed_card_click", ref);
+                      setBreedReferrer(ref);
                     }}
-                    className="chip"
                   >
-                    <span>{s.label}</span>
-                    <span className="tabular-nums text-[9.5px] text-foreground/40">{s.count}</span>
-                  </button>
+                    <BreedCard breed={b} variant={i % 3 === 0 ? "tall" : "default"} tokens={tokens} />
+                  </div>
                 ))}
               </div>
-            </div>
-          )}
 
-          <button
-            type="button"
-            onClick={clearAll}
-            className="btn-ghost mt-7 inline-flex items-center gap-2"
-          >
-            <X className="h-3.5 w-3.5" /> Clear all filters
-          </button>
+              {hasMore && (
+                <div className="mt-16 flex flex-col items-center gap-3 md:mt-20">
+                  <MicroLabel>
+                    Showing {visible.length} of {filtered.length}
+                  </MicroLabel>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nextPage = page + 1;
+                      const nextLoaded = Math.min(nextPage * PAGE_SIZE, filtered.length);
+                      track("results_load_more", {
+                        surface,
+                        page: nextPage,
+                        page_size: PAGE_SIZE,
+                        loaded: nextLoaded,
+                        total: filtered.length,
+                      });
+                      setPage(nextPage);
+                    }}
+                    className="btn-ghost inline-flex items-center gap-2"
+                  >
+                    Load {Math.min(PAGE_SIZE, filtered.length - visible.length)} more →
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </div>
-      ) : (
-        <div className="mt-12 grid gap-x-6 gap-y-14 sm:grid-cols-2 md:mt-14 md:gap-x-10 md:gap-y-20 lg:grid-cols-3">
-          {filtered.map((b, i) => (
-            <div
-              key={b.slug}
-              className={i % 5 === 1 ? "md:translate-y-12" : ""}
-              onClick={() =>
-                track("breed_card_click", {
-                  surface,
-                  slug: b.slug,
-                  query: state.q,
-                  filters: state.filters,
-                })
-              }
-            >
-              <BreedCard breed={b} variant={i % 3 === 0 ? "tall" : "default"} tokens={tokens} />
-            </div>
-          ))}
-        </div>
-      )}
+      </div>
     </div>
   );
 }

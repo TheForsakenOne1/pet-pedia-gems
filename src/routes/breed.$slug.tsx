@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { createFileRoute, notFound, Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
@@ -8,6 +9,7 @@ import { BreedImage } from "@/components/breed-image";
 import { getBreedDetail, listBreeds } from "@/server/breeds";
 import type { BreedDetail, BreedSummary } from "@/types/breed";
 import { Body, DisplayLG, DisplayMD, DisplayXL, Eyebrow, EyebrowPill, Lede, MicroLabel, Prose } from "@/components/typography";
+import { track, consumeBreedReferrer } from "@/lib/analytics";
 
 export const Route = createFileRoute("/breed/$slug")({
   loader: async ({ params }) => {
@@ -129,6 +131,19 @@ function BreedPage() {
   const data = Route.useLoaderData() as { breed: BreedDetail; related: BreedSummary[] };
   const b = data.breed;
   const related = data.related;
+
+  // breed_page_view — fire once per slug visit. Surface/query/filters come
+  // from the explorer referrer when present, otherwise "direct".
+  useEffect(() => {
+    const ref = consumeBreedReferrer(b.slug);
+    track("breed_page_view", {
+      surface: ref?.surface ?? "direct",
+      slug: b.slug,
+      species: b.species,
+      query: ref?.query ?? "",
+      filters: ref?.filters ?? [],
+    });
+  }, [b.slug, b.species]);
 
   const facts: [string, string][] = [
     ["Origin", b.origin],
