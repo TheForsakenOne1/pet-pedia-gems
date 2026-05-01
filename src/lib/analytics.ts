@@ -37,6 +37,22 @@ export type AnalyticsEvent =
   | {
       name: "breed_card_click";
       props: { surface: "dogs" | "cats" | "home"; slug: string; query: string; filters: string[] };
+    }
+  | {
+      name: "chip_sort_change";
+      props: { surface: "dogs" | "cats"; sort: "relevance" | "count" | "alpha"; query: string };
+    }
+  | {
+      name: "results_load_more";
+      props: { surface: "dogs" | "cats"; page: number; page_size: number; loaded: number; total: number };
+    }
+  | {
+      name: "results_page_view";
+      props: { surface: "dogs" | "cats"; page: number; page_size: number; visible: number; total: number };
+    }
+  | {
+      name: "breed_page_view";
+      props: { surface: "dogs" | "cats" | "direct"; slug: string; species: "dog" | "cat"; query: string; filters: string[] };
     };
 
 type WindowWithAnalytics = Window & {
