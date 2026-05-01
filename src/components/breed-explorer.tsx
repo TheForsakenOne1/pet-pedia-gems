@@ -102,16 +102,34 @@ export function BreedExplorer({
     return counts;
   }, [breeds, state.q]);
 
+  // Chip ordering — relevance (matches in current query first, then count),
+  // count (most-used), or alpha. Defaults to "relevance" so query-matching
+  // chips bubble up while typing.
+  const [chipSort, setChipSort] = useState<ChipSort>("relevance");
+
   const chips = useMemo(() => {
+    const queryTokens = tokens;
     const all = Array.from(chipCounts.entries())
-      .map(([id, count]) => ({ id, count, label: prettify(id, overrides) }))
-      .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+      .map(([id, count]) => {
+        const label = prettify(id, overrides);
+        const hay = `${id} ${label}`.toLowerCase();
+        const queryHits = queryTokens.reduce((n, t) => (hay.includes(t) ? n + 1 : n), 0);
+        return { id, count, label, queryHits };
+      })
+      .sort((a, b) => {
+        if (chipSort === "alpha") return a.label.localeCompare(b.label);
+        if (chipSort === "count") return b.count - a.count || a.label.localeCompare(b.label);
+        // relevance: query-matching chips first, then by count, then alpha
+        if (b.queryHits !== a.queryHits) return b.queryHits - a.queryHits;
+        return b.count - a.count || a.label.localeCompare(b.label);
+      });
     const present = new Set(all.map((c) => c.id));
     for (const f of state.filters) {
-      if (!present.has(f)) all.unshift({ id: f, count: 0, label: prettify(f, overrides) });
+      if (!present.has(f))
+        all.unshift({ id: f, count: 0, label: prettify(f, overrides), queryHits: 0 });
     }
     return all.slice(0, maxChips);
-  }, [chipCounts, state.filters, maxChips, overrides]);
+  }, [chipCounts, state.filters, maxChips, overrides, chipSort, tokens]);
 
   const filtered = useMemo(() => filterBreeds(breeds, state), [breeds, state]);
 
