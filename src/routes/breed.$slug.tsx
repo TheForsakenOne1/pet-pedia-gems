@@ -132,6 +132,19 @@ function BreedPage() {
   const b = data.breed;
   const related = data.related;
 
+  // breed_page_view — fire once per slug visit. Surface/query/filters come
+  // from the explorer referrer when present, otherwise "direct".
+  useEffect(() => {
+    const ref = consumeBreedReferrer(b.slug);
+    track("breed_page_view", {
+      surface: ref?.surface ?? "direct",
+      slug: b.slug,
+      species: b.species,
+      query: ref?.query ?? "",
+      filters: ref?.filters ?? [],
+    });
+  }, [b.slug, b.species]);
+
   const facts: [string, string][] = [
     ["Origin", b.origin],
     ["Group", b.group],
