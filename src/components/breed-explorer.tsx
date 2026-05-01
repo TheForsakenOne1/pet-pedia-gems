@@ -2,10 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { BreedSummary } from "@/types/breed";
 import { BreedCard } from "@/components/breed-card";
 import { BreedGridSkeleton } from "@/components/breed-skeletons";
-import { Search, X, SlidersHorizontal, Sparkles } from "lucide-react";
+import { Search, X, SlidersHorizontal, Sparkles, ArrowDownNarrowWide } from "lucide-react";
 import { tokenize, matchesAll } from "@/lib/search";
 import { Body, DisplayMD, Eyebrow, MicroLabel } from "@/components/typography";
-import { track } from "@/lib/analytics";
+import { track, setBreedReferrer } from "@/lib/analytics";
+
+type ChipSort = "relevance" | "count" | "alpha";
+const PAGE_SIZE = 12;
 
 export interface ExplorerState {
   q: string;
