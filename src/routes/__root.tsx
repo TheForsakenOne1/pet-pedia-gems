@@ -1,4 +1,5 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import { DisplayLG, Eyebrow } from "@/components/typography";
 
 import "@fontsource-variable/fraunces/index.css";
 import "@fontsource-variable/fraunces/wght-italic.css";
@@ -11,8 +12,8 @@ function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <p className="eyebrow text-rust">Error № 404</p>
-        <h1 className="display-lg mt-3">A missing dossier.</h1>
+        <Eyebrow className="!text-rust">Error № 404</Eyebrow>
+        <DisplayLG as="h1" className="mt-3">A missing dossier.</DisplayLG>
         <p className="mt-4 text-base text-muted-foreground">
           The page you sought has wandered off the leash.
         </p>

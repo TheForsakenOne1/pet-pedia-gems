@@ -7,7 +7,7 @@ import { BreedDetailSkeleton } from "@/components/breed-skeletons";
 import { BreedImage } from "@/components/breed-image";
 import { getBreedDetail, listBreeds } from "@/server/breeds";
 import type { BreedDetail, BreedSummary } from "@/types/breed";
-import { Body, DisplayLG, DisplayMD, DisplayXL, Eyebrow, EyebrowPill, Lede, MicroLabel } from "@/components/typography";
+import { Body, DisplayLG, DisplayMD, DisplayXL, Eyebrow, EyebrowPill, Lede, MicroLabel, Prose } from "@/components/typography";
 
 export const Route = createFileRoute("/breed/$slug")({
   loader: async ({ params }) => {
@@ -188,19 +188,19 @@ function BreedPage() {
       <section className="mx-auto max-w-[1400px] px-4 py-12 sm:px-6 md:grid md:grid-cols-12 md:gap-20 md:px-10 md:py-24">
         <article className="md:col-span-8">
           <Section eyebrow="Chapter I" title="History">
-            <p className="drop-cap body-serif">{b.history}</p>
+            <Prose dropCap>{b.history}</Prose>
           </Section>
 
           <Section eyebrow="Chapter II" title="Personality">
-            <p className="body-serif">{b.personality}</p>
+            <Prose>{b.personality}</Prose>
           </Section>
 
           <Section eyebrow="Chapter III" title="Care & Husbandry">
-            <p className="body-serif">{b.care}</p>
+            <Prose>{b.care}</Prose>
           </Section>
 
           <Section eyebrow="Chapter IV" title="Health">
-            <p className="body-serif">{b.health}</p>
+            <Prose>{b.health}</Prose>
           </Section>
 
           <div className="mt-20 rounded-2xl border border-ink/10 bg-cream/50 p-8 backdrop-blur md:mt-24 md:p-10">

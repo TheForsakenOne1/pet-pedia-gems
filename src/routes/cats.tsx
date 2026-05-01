@@ -123,6 +123,7 @@ function CatsPage() {
           Every recognized feline lineage we have documented — from the lynx-eared frontier cats of Maine to a hairless mutation born in a 1966 Toronto living room.
         </Body>
         <BreedExplorer
+          surface="cats"
           breeds={cats}
           state={{ q, filters }}
           onChange={(next) => navigate({ search: () => ({ q: next.q, filters: next.filters }), replace: true })}

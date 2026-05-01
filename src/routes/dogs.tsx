@@ -123,6 +123,7 @@ function DogsPage() {
           A complete working list of canine pedigrees — from gundogs to giants. Each entry runs deep: origin, anatomy, temperament, hard health truths, and the care a fifteen-year companion deserves.
         </Body>
         <BreedExplorer
+          surface="dogs"
           breeds={dogs}
           state={{ q, filters }}
           onChange={(next) => navigate({ search: () => ({ q: next.q, filters: next.filters }), replace: true })}

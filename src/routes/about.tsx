@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { DisplayXL, DisplayLG, DisplayMD, Eyebrow, Prose } from "@/components/typography";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
@@ -68,11 +69,11 @@ export default function AboutPage() {
             <span>Colophon · MMXXVI</span>
             <span className="text-rust">Inside the almanac</span>
           </div>
-          <p className="eyebrow mt-8 text-rust md:mt-10">The Masthead</p>
-          <h1 className="display-xl mt-3 text-balance md:mt-4">
+          <Eyebrow className="mt-8 !text-rust md:mt-10">The Masthead</Eyebrow>
+          <DisplayXL className="mt-3 md:mt-4">
             How the<br />
             <span className="italic text-rust">almanac</span> is made.
-          </h1>
+          </DisplayXL>
           <p className="mt-6 max-w-2xl font-serif text-xl italic leading-snug text-foreground/80 sm:text-2xl md:text-3xl">
             Pelt &amp; Paw is built by six people, one veterinarian on call, and a stack of pre-war kennel-club records.
             Here is who we are, what we believe, and how each dossier reaches you.
@@ -98,13 +99,13 @@ export default function AboutPage() {
       {/* ORIGIN STORY */}
       <section className="mx-auto max-w-[1400px] grid gap-12 px-4 py-16 sm:px-6 md:grid-cols-12 md:gap-16 md:px-10 md:py-24">
         <div className="md:col-span-3">
-          <p className="eyebrow text-rust">Chapter I</p>
-          <h2 className="display-md mt-3">An origin in argument.</h2>
+          <Eyebrow className="!text-rust">Chapter I</Eyebrow>
+          <DisplayMD as="h2" className="mt-3">An origin in argument.</DisplayMD>
         </div>
         <div className="md:col-span-9">
-          <p className="drop-cap body-serif">
+          <Prose dropCap>
             Pelt &amp; Paw began in a kitchen in Östermalm, over an argument neither of us has won. One editor — a lifelong working-dog person — believed any honest magazine about pets had to begin with the dog. The other — converted, late and reluctantly, to the cat — refused to publish anything that pretended one species mattered more than the other. The compromise was the magazine you are reading: a single, serious almanac for both, refusing to be saccharine, and trusting the reader to handle hard facts about lifespan, health, and temperament.
-          </p>
+          </Prose>
           <p className="mt-6 text-pretty text-base leading-relaxed text-foreground/80 md:text-lg">
             The first issue, published as a 36-page broadsheet in February of MMXXVI, profiled four breeds and a single veterinary essay on hip dysplasia. We were embarrassed by half of it within a year. The current edition is the result of correcting those embarrassments, one breed at a time.
           </p>
@@ -114,8 +115,8 @@ export default function AboutPage() {
       {/* PRINCIPLES */}
       <section className="border-y border-ink/20 bg-ink text-cream">
         <div className="mx-auto max-w-[1400px] px-4 py-16 sm:px-6 md:px-10 md:py-24">
-          <p className="eyebrow text-gold">Editorial Principles</p>
-          <h2 className="display-lg mt-3">Four rules we will not bend.</h2>
+          <Eyebrow className="!text-gold">Editorial Principles</Eyebrow>
+          <DisplayLG as="h2" className="mt-3">Four rules we will not bend.</DisplayLG>
           <div className="mt-12 grid gap-10 md:mt-16 md:grid-cols-2 md:gap-x-16 md:gap-y-14">
             {PRINCIPLES.map((p) => (
               <div key={p.n} className="border-t border-cream/15 pt-6">
@@ -132,8 +133,8 @@ export default function AboutPage() {
       <section className="mx-auto max-w-[1400px] px-4 py-16 sm:px-6 md:px-10 md:py-24">
         <div className="grid gap-6 border-b border-ink/30 pb-6 md:grid-cols-12 md:items-end">
           <div className="md:col-span-8">
-            <p className="eyebrow text-rust">Chapter II</p>
-            <h2 className="display-lg mt-3">From query to dossier.</h2>
+            <Eyebrow className="!text-rust">Chapter II</Eyebrow>
+            <DisplayLG as="h2" className="mt-3">From query to dossier.</DisplayLG>
           </div>
           <p className="text-sm leading-relaxed text-muted-foreground md:col-span-4">
             Every breed page passes through five stages. Most take six to eight weeks; a few have taken six months.
@@ -153,8 +154,8 @@ export default function AboutPage() {
       {/* MASTHEAD ROSTER */}
       <section className="border-t border-ink/20 bg-secondary/40">
         <div className="mx-auto max-w-[1400px] px-4 py-16 sm:px-6 md:px-10 md:py-24">
-          <p className="eyebrow text-rust">The Roster</p>
-          <h2 className="display-lg mt-3">Who actually makes it.</h2>
+          <Eyebrow className="!text-rust">The Roster</Eyebrow>
+          <DisplayLG as="h2" className="mt-3">Who actually makes it.</DisplayLG>
           <div className="mt-12 grid gap-x-10 gap-y-10 sm:grid-cols-2 md:grid-cols-3">
             {MASTHEAD.map((m) => (
               <article key={m.name} className="border-t border-ink/30 pt-5">
@@ -169,7 +170,7 @@ export default function AboutPage() {
 
       {/* PULL QUOTE */}
       <section className="mx-auto max-w-4xl px-4 py-20 text-center sm:px-6 md:py-28">
-        <p className="eyebrow text-rust">A House Saying</p>
+        <Eyebrow className="!text-rust">A House Saying</Eyebrow>
         <blockquote className="mt-5 font-serif text-3xl italic leading-snug text-balance md:mt-6 md:text-5xl">
           &ldquo;Write the page you would have wanted to read the night before you brought the animal home.&rdquo;
         </blockquote>
@@ -180,8 +181,8 @@ export default function AboutPage() {
       <section className="border-t border-ink/20">
         <div className="mx-auto flex max-w-[1400px] flex-col items-start justify-between gap-8 px-4 py-16 sm:px-6 md:flex-row md:items-end md:gap-12 md:px-10 md:py-20">
           <div>
-            <p className="eyebrow text-rust">Start reading</p>
-            <h2 className="display-md mt-3">Pick an index. Begin.</h2>
+            <Eyebrow className="!text-rust">Start reading</Eyebrow>
+            <DisplayMD as="h2" className="mt-3">Pick an index. Begin.</DisplayMD>
             <p className="mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
               Each dossier runs deep — origin, anatomy, temperament, health, husbandry, and the things owners only learn by year three.
             </p>

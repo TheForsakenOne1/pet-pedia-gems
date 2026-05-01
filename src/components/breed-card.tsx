@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import type { BreedSummary } from "@/types/breed";
 import { BreedImage } from "@/components/breed-image";
 import { highlight } from "@/lib/search";
+import { DisplayLG, Eyebrow } from "@/components/typography";
 
 interface Props {
   breed: BreedSummary;
@@ -36,8 +37,8 @@ export function BreedCard({ breed, variant = "default", tokens = [] }: Props) {
         </div>
         <div className="flex flex-col justify-between md:col-span-5">
           <div>
-            <p className="eyebrow">№ {breed.issueNo} — The Feature</p>
-            <h2 className="display-lg mt-5 text-balance">{highlight(breed.name, tokens)}</h2>
+            <Eyebrow>№ {breed.issueNo} — The Feature</Eyebrow>
+            <DisplayLG as="h2" className="mt-5">{highlight(breed.name, tokens)}</DisplayLG>
             <p className="mt-4 font-serif text-2xl italic leading-snug text-foreground/70 sm:text-[1.65rem]">
               {highlight(breed.tagline, tokens)}
             </p>
